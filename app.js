@@ -20,7 +20,7 @@ app.get('/', function(req, res){
 	}
 });
 
-app.listen(80);
+app.listen(3000);
 
 // Create the TCP server to communicate with the Arduino.
 var server = net.createServer(function(socket) {
