@@ -1,23 +1,41 @@
+// Require libraries
 var net = require('net');
 var http = require('http');
 
-// Create the http server to communicate with apps.
-http.createServer(function(request, response) {
-  response.writeHead(200, {"Content-Type": "text/plain"});
-  response.write("Hello World");
-  response.end();
-}).listen(8888);
+// Store TCP connections. Will need to find a better way to do this (in a database)
+var sockets = {};
 
-// Create the telnet server to communicate with the Arduino.
-var server = net.createServer(function(c) { //'connection' listener
-  console.log('server connected');
-  c.on('end', function() {
-    console.log('server disconnected');
-  });
-  c.write('hello\r\n');
-  c.pipe(c);
+// Create the http server to communicate with apps using Express.
+var app = require('express').createServer();
+
+// Routing for the root
+app.get('/', function(req, res){
+	console.log('HTTP request received');
+	// If a device is connected, send it a message
+	if (sockets[0]) {
+		sockets[0].write('HIGH\r\n');
+		res.send('Message sent.');
+	} else {
+		res.send('No devices connected.');
+	}
 });
 
-server.listen(1307, function() { //'listening' listener
-  console.log('server bound');
+app.listen(3000);
+
+// Create the TCP server to communicate with the Arduino.
+var server = net.createServer(function(socket) {
+	console.log('Client connected');
+	// Add socket to the map to keep track of it
+	sockets[0] = socket;
+	socket.on('end', function() {
+		delete sockets[socket.remoteAddress];
+		console.log('Client disconnected');
+	});
+	socket.write('hello\r\n');
+	socket.pipe(socket);
+});
+
+// Fire up the TCP server bound to port 1307
+server.listen(1307, function() {
+	console.log('TCP server bound to port 1307');
 });
