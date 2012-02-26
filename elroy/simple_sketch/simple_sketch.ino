@@ -3,17 +3,19 @@
 
 #include <SPI.h>
 #include <WiFly.h>
+#include <aJSON.h>
 
 #include "Credentials.h"
 
 const int requestInterval = 10000; // delay between requests
 long lastAttemptTime = 0; // last time you connected to the server, in milliseconds
-
-byte server[] = { 23, 21, 169, 6 }; // MacBook on local network
-
-String currentLine = ""; // string to hold the text from the server
-
 const int ledPin = 2; // the pin that the LED is attached to
+const char id[] = "Elroy";
+
+// byte server[] = { 23, 21, 169, 6 }; // Amazon EC2
+byte server[] = { 10, 0, 1, 10 }; // MacBook on local network
+
+String bufferString = ""; // string to hold the text from the server
 
 WiFlyClient client(server, 1307);  // WiFly client
 
@@ -45,27 +47,14 @@ void loop() {
       char c = client.read();
       Serial.print(c);
       
-      // add the incoming bytes to the end of line:
-      currentLine += c;
-    
-      // if you get a newline, clear the line:
+      // if you get a newline, clear the line and process the command:
       if (c == '\n') {
-        currentLine = "";
+        process();
+        Serial.println("Processing command.");
       }
-    
-      // if the current line ends with HIGH, activate the LED
-      if ( currentLine.endsWith("HIGH")) {
-        digitalWrite(ledPin, HIGH);
-      }
-    
-      // if the current line ends with LOW, deactivate the LED
-      if ( currentLine.endsWith("LOW")) {
-        digitalWrite(ledPin, LOW);
-      }
-      
-      // if the current line ends with EXIT, disconnect the server
-      if ( currentLine.endsWith("EXIT")) {
-        client.stop();
+      // add the incoming bytes to the end of line:
+      else {
+        bufferString += c;
       }
     }
 
@@ -89,10 +78,37 @@ void connectToServer() {
 
   if (client.connect()) {
     Serial.println("connected");
+    client.print(id);
   } else {
     Serial.println("connection failed");
   }
   
   // Note the time of the last connect
   lastAttemptTime = millis();
+}
+
+void process() {
+  
+  Serial.println(bufferString);
+  
+  // if the current line ends with HIGH, activate the LED
+  if ( bufferString.startsWith("HIGH")) {
+    Serial.println("Turning LED on.");
+    digitalWrite(ledPin, HIGH);
+  }
+    
+  // if the current line ends with LOW, deactivate the LED
+  if ( bufferString.startsWith("LOW")) {
+    Serial.println("Turning LED off.");
+    digitalWrite(ledPin, LOW);
+  }
+      
+  // if the current line ends with EXIT, disconnect the server
+  if ( bufferString.startsWith("EXIT")) {
+    Serial.println("Disconnecting client.");
+    client.stop();
+  }
+  
+  // Erase the buffer string
+  bufferString = "";
 }
