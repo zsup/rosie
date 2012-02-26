@@ -29,11 +29,12 @@ var server = net.createServer(function(socket) {
 	console.log('TCP client connected');
 	socket.setEncoding('ascii');
 	socket.setKeepAlive(true);
+	
 	socket.on('end', function() {
 		// delete sockets[socket.remoteAddress];
 		console.log('TCP client disconnected');
 	});
-	// Receive device ID and store device in the sockets map
+	// Receive data
 	socket.on('data', function(data) {
 		console.log(data);
 		sockets[data] = socket;

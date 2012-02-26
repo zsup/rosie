@@ -79,7 +79,8 @@ void connectToServer() {
 
   if (client.connect()) {
     Serial.println("connected");
-    client.print(jsonify("Device ID", deviceid));
+    // client.print(jsonify("Device ID", deviceid));
+    client.print(deviceid);
   } else {
     Serial.println("connection failed");
   }
