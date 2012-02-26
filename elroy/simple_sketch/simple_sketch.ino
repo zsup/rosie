@@ -3,14 +3,15 @@
 
 #include <SPI.h>
 #include <WiFly.h>
-#include <aJSON.h>
+// #include <aJSON.h>
 
 #include "Credentials.h"
 
 const int requestInterval = 10000; // delay between requests
 long lastAttemptTime = 0; // last time you connected to the server, in milliseconds
 const int ledPin = 2; // the pin that the LED is attached to
-const char id[] = "Elroy";
+
+String deviceid = "Elroy"; // Device ID, string of characters
 
 // byte server[] = { 23, 21, 169, 6 }; // Amazon EC2
 byte server[] = { 10, 0, 1, 10 }; // MacBook on local network
@@ -78,7 +79,7 @@ void connectToServer() {
 
   if (client.connect()) {
     Serial.println("connected");
-    client.print(id);
+    client.print(jsonify("Device ID", deviceid));
   } else {
     Serial.println("connection failed");
   }
@@ -92,23 +93,29 @@ void process() {
   Serial.println(bufferString);
   
   // if the current line ends with HIGH, activate the LED
-  if ( bufferString.startsWith("HIGH")) {
+  if ( bufferString.startsWith("turnOn")) {
     Serial.println("Turning LED on.");
     digitalWrite(ledPin, HIGH);
   }
     
   // if the current line ends with LOW, deactivate the LED
-  if ( bufferString.startsWith("LOW")) {
+  if ( bufferString.startsWith("turnOff")) {
     Serial.println("Turning LED off.");
     digitalWrite(ledPin, LOW);
   }
       
   // if the current line ends with EXIT, disconnect the server
-  if ( bufferString.startsWith("EXIT")) {
+  if ( bufferString.startsWith("disconnectClient")) {
     Serial.println("Disconnecting client.");
     client.stop();
   }
   
   // Erase the buffer string
   bufferString = "";
+}
+
+String jsonify (String key, String value) {
+  String result = "";
+  result = "{ " + key + " : " + value + " }";
+  return result;
 }
