@@ -9,7 +9,7 @@
 const int requestInterval = 10000; // delay between requests
 long lastAttemptTime = 0; // last time you connected to the server, in milliseconds
 
-byte server[] = { 10, 0, 1, 10 }; // MacBook on local network
+byte server[] = { 23, 21, 169, 6 }; // MacBook on local network
 
 String currentLine = ""; // string to hold the text from the server
 
