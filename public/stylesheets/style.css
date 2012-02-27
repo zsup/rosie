@@ -1,8 +1,29 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-image: url('/images/dark_mosaic.png');
 }
 
-a {
-  color: #00B7FF;
+a.switchy {
+	display: block;
+	position: relative;
+	text-align: center;
+	margin: 200px auto;
+	text-transform: uppercase;
+	text-decoration: none;
+	font-family: Futura, Helvetica, Arial, sans-serif;
+	font-weight: 500;
+	font-size: 72px;
+	color: #fff;
+	-webkit-transition: all 0.5s;
+}
+
+a.switchy:hover {
+	text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+	-webkit-transition: all 0.5s;
+}
+
+a.switchy:active {
+	text-shadow: 0 0 20px rgba(255, 255, 255, 1);
+	-webkit-transition: all 0.5s;	
 }
