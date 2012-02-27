@@ -13,8 +13,8 @@ const int ledPin = 2; // the pin that the LED is attached to
 
 String deviceid = "Elroy"; // Device ID, string of characters
 
-// byte server[] = { 23, 21, 169, 6 }; // Amazon EC2
-byte server[] = { 10, 0, 1, 10 }; // MacBook on local network
+byte server[] = { 23, 21, 169, 6 }; // Amazon EC2
+// byte server[] = { 10, 0, 1, 10 }; // MacBook on local network
 
 String bufferString = ""; // string to hold the text from the server
 
@@ -50,8 +50,8 @@ void loop() {
       
       // if you get a newline, clear the line and process the command:
       if (c == '\n') {
-        process();
         Serial.println("Processing command.");
+        process();
       }
       // add the incoming bytes to the end of line:
       else {
@@ -90,8 +90,6 @@ void connectToServer() {
 }
 
 void process() {
-  
-  Serial.println(bufferString);
   
   // if the current line ends with HIGH, activate the LED
   if ( bufferString.startsWith("turnOn")) {
