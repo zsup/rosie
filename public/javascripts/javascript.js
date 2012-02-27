@@ -8,12 +8,12 @@ $(document).ready(function() {
 
 	function toggleLights() {
 		if (lightsOn) {
-			$.ajax('/devices/Elroy/turnOff', {
+			$.ajax('/device/Elroy/turnOff', {
 				// More stuff here
 			});
 			lightsOn = false;
 		} else {
-			$.ajax('/devices/Elroy/turnOn', {
+			$.ajax('/device/Elroy/turnOn', {
 				// More stuff here
 			});
 			lightsOn = true;
