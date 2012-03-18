@@ -14,7 +14,8 @@ const int ledPin = 2; // the pin that the LED is attached to
 String deviceid = "Elroy"; // Device ID, string of characters
 
 byte server[] = { 23, 21, 169, 6 }; // Amazon EC2
-// byte server[] = { 10, 0, 1, 10 }; // MacBook on local network
+// byte server[] = { 10, 0, 10, 1 }; // MacBook on local network
+// byte server[] = { 192, 168, 1, 14 }; // MacBook on Noah's network
 
 String bufferString = ""; // string to hold the text from the server
 

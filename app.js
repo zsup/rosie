@@ -61,6 +61,10 @@ app.get('/device/:id/:dothis', function(req, res){
 	}
 });
 
+app.get('/demo', function(req, res){
+	res.redirect('http://www.youtube.com/watch?v=nflJm6O07V4');
+});
+
 app.listen(80);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
