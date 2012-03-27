@@ -2,7 +2,7 @@
 #define __CREDENTIALS_H__
 
 // Wifi parameters
-char passphrase[] = "zorroboo";
-char ssid[] = "Hawking_300N_Extender";
+char passphrase[] = "zachypoo";
+char ssid[] = "googlybear";
 
 #endif

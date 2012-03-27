@@ -62,7 +62,11 @@ app.get('/device/:id/:dothis', function(req, res){
 });
 
 app.get('/demo', function(req, res){
-	res.redirect('http://www.youtube.com/watch?v=nflJm6O07V4');
+	res.redirect('http://youtu.be/SxcsdtaRDOA');
+});
+
+app.get('/founders', function(req, res){
+	res.redirect('http://youtu.be/E8-jx9-z6Qk');
 });
 
 app.listen(80);
