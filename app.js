@@ -60,7 +60,7 @@ app.get('/device/:id/:dothis', function(req, res){
 	console.log('HTTP request received for device ' + id + ' to ' + dothis);
 	// If this device is connected, send it a message
 	if (sockets[id]) {
-		sockets[id].write(dothis + '\r\n');
+		sockets[id].write(dothis + '\n');
 		res.send('Message sent.');
 	} else {
 		res.send('No device connected with that ID.');
@@ -110,7 +110,7 @@ server = net.createServer(function(socket) {
 			buffer = buffer.slice(separatorIndex + 1);
 		}
 	});
-	socket.write('hello\r\n');
+	socket.write('hello\n');
 });
 
 // Fire up the TCP server bound to port 1307
