@@ -3,21 +3,9 @@ $(document).ready(function() {
 		e.preventDefault();
 		toggleLights();
 	});
-	
-	var lightsOn = false;
 
 	function toggleLights() {
-		if (lightsOn) {
-			$.ajax('/device/Elroy/turnOff', {
-				// More stuff here
-			});
-			lightsOn = false;
-		} else {
-			$.ajax('/device/Elroy/turnOn', {
-				// More stuff here
-			});
-			lightsOn = true;
-		}
+		$.ajax('/device/Elroy/toggle');
 	} 
 });
 

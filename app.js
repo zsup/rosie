@@ -8,8 +8,14 @@
 var net = require('net');
 var http = require('http');
 
-// Store TCP connections. Will need to find a better way to do this (in a database)
+// Store TCP connections in an array.
 var sockets = {};
+
+// Helpers for processing TCP stream.
+var buffer = "";
+var separator = "\n";
+var process;
+var server;
 
 
 /**
@@ -43,11 +49,11 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
-// Routes
+// Routing for the web-app
 
 app.get('/', routes.index);
 
-// Routing for http requests
+// Routing for http requests (API)
 app.get('/device/:id/:dothis', function(req, res){
 	var id = req.params.id;
 	var dothis = req.params.dothis;
@@ -61,6 +67,7 @@ app.get('/device/:id/:dothis', function(req, res){
 	}
 });
 
+// Routing for a few redirects
 app.get('/demo', function(req, res){
 	res.redirect('http://www.youtube.com/watch?v=fLkIoJ3BXEw');
 });
@@ -79,7 +86,7 @@ console.log("Express server listening on port %d in %s mode", app.address().port
 
 
 // Create the TCP server to communicate with the Arduino.
-var server = net.createServer(function(socket) {
+server = net.createServer(function(socket) {
 	console.log('TCP client connected');
 	socket.setEncoding('ascii');
 	socket.setKeepAlive(true);
@@ -88,10 +95,20 @@ var server = net.createServer(function(socket) {
 		// delete sockets[socket.remoteAddress];
 		console.log('TCP client disconnected');
 	});
-	// Receive data
-	socket.on('data', function(data) {
-		console.log(data);
-		sockets[data] = socket;
+	
+	// Receive and parse incoming data
+	socket.on('data', function(chunk) {
+		buffer += chunk;
+		console.log("Message received: " + chunk + " End of message.");
+		
+		var separatorIndex = buffer.indexOf(separator);
+		var foundMessage = separatorIndex != -1;
+		
+		if (foundMessage) {
+			var message = buffer.slice(0, separatorIndex);
+			process(message, socket);
+			buffer = buffer.slice(separatorIndex + 1);
+		}
 	});
 	socket.write('hello\r\n');
 });
@@ -100,3 +117,10 @@ var server = net.createServer(function(socket) {
 server.listen(1307, function() {
 	console.log('TCP server bound to port 1307');
 });
+
+// Process messages
+process = function (message, socket) {
+	message = message.trim();
+	console.log("Processing message: " + message);
+	sockets[message] = socket;
+}
