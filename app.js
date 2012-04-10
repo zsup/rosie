@@ -110,7 +110,6 @@ server = net.createServer(function(socket) {
 			buffer = buffer.slice(separatorIndex + 1);
 		}
 	});
-	socket.write('hello\n');
 });
 
 // Fire up the TCP server bound to port 1307
