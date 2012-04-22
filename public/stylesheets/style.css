@@ -1,7 +1,8 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background-image: url('/images/dark_mosaic.png');
+  /*background-image: url('/images/dark_mosaic.png');*/
+  background-color: #999;
 }
 
 a.switchy {
@@ -26,4 +27,36 @@ a.switchy:hover {
 a.switchy:active {
 	text-shadow: 0 0 20px rgba(255, 255, 255, 1);
 	-webkit-transition: all 0.5s;	
+}
+
+td {
+	font-family: Futura, Helvetica, Arial, sans-serif;
+	font-weight: 500;
+	font-size: 24px;
+	padding: 20px;
+}
+
+td[devicestatus="On"] {
+	background-color: #fff;
+}
+
+td[devicestatus="Off"] {
+	background-color: #000;
+	color: #fff;
+}
+
+tr:last-child {
+	display: none;
+}
+
+.srvr {
+	display: block;
+	width: 100px;
+	height: 100px;
+	border: 1px solid black;
+}
+
+
+.srvrok {
+	background-color: #0f0;
 }
