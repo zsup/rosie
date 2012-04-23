@@ -75,62 +75,84 @@ app.get('/', loadDeviceInfo, routes.index);
 
 
 // Routing for http requests (API)
-app.get('/device/:id/:dothis', function(req, res){
-	var id = req.params.id;
+app.get('/device/:deviceid/:dothis', function(req, res){
+	var deviceid = req.params.deviceid;
 	var dothis = req.params.dothis;
-	clog('HTTP request received for device ' + id + ' to ' + dothis);
+	clog('HTTP request received for device ' + deviceid + ' to ' + dothis);
 	// If this device is connected, send it a message
-	if (devices[id]) {
+	device = devices[deviceid]
+	if (device) {
 		switch(dothis) {
 			case "turnOn":
-				clog('sending turnOn to '+id)
-				devices[id].socket.write('turnOn\n');
+				clog('sending turnOn to '+device.deviceid)
+				device.socket.write(device.deviceid+',turnOn\n');
 				break;
 			case "turnOff":
-				clog('sending turnOff to '+id)
-				devices[id].socket.write('turnOff\n');
+				clog('sending turnOff to '+device.deviceid)
+				device.socket.write(device.deviceid+',turnOff\n');
 				break;
 			case "toggle":
-				if(devices[id].devicestatus=="On") {
-					clog('sending turnOff to '+id)
-					devices[id].socket.write('turnOff\n');
-					devices[id].devicestatus="Off";
+				if(device.devicestatus=="On") {
+					clog('sending turnOff to '+device.deviceid)
+					device.socket.write(device.deviceid+',turnOff\n');
+					device.devicestatus="Off";
 				}
 				else {
-					clog('sending turnOn to '+id)
-					devices[id].devicestatus="On";
-					devices[id].socket.write('turnOn\n');
+					clog('sending turnOn to '+device.deviceid)
+					device.devicestatus="On";
+					device.socket.write(device.deviceid+',turnOn\n');
 				};
-				updateStatus(devices[id]);
+				updateStatus(device);
 				break;
 			case "flash":
-				// first toggle once
-				if(devices[id].devicestatus=="On") {
-					clog('sending turnOff to '+id)
-					devices[id].socket.write('turnOff\n');
-					devices[id].devicestatus="Off";
+				if(device.flashstatus == "Flashing") {
+					clog("not sending flash command - already flashing");
+					break;
 				}
 				else {
-					clog('sending turnOn to '+id)
-					devices[id].devicestatus="On";
-					devices[id].socket.write('turnOn\n');
-				};
-				updateStatus(devices[id]);
-				
-
-				//then set flash timer
-				intervalID = setInterval(flashToggle, 750, id)
-				devices[id].flashstatus = "Flashing";
-				devices[id].flashID = intervalID;
-				updateFlashStatus(devices[id]);
-				break;
+					// first toggle once
+					if(device.devicestatus=="On") {
+						clog('sending turnOff to '+device.deviceid)
+						device.socket.write(device.deviceid+',turnOff\n');
+						device.devicestatus="Off";
+					}
+					else {
+						clog('sending turnOn to '+device.deviceid)
+						device.devicestatus="On";
+						device.socket.write(device.deviceid+',turnOn\n');
+					}
+					updateStatus(device);
+					
+					//then set flash timer
+					intervalID = setInterval(flashToggle, 750, device)
+					device.flashstatus = "Flashing";
+					device.flashID = intervalID;
+					updateFlashStatus(device);
+					break;
+				}
 			case "stopflash":
-				clearInterval(devices[id].flashID)
-				delete devices[id].flashID;
-				devices[id].flashstatus = "NotFlashing";
-				updateFlashStatus(devices[id]);
+				clearInterval(device.flashID)
+				delete device.flashID;
+				device.flashstatus = "NotFlashing";
+				updateFlashStatus(device);
 				break;
 			default:
+				if (dothis.indexOf("dim") == 0) {
+					//dimming
+					dothis = dothis.slice(3)
+					var dimval = parseInt(dothis)
+					if(0<=dimval && dimval <=256) {
+						if(dimval==0) {dimval=1}
+						if(dimval==256) {dimval=255}
+						clog('sending dim' + dimval + ' to '+device.deviceid)
+						device.socket.write(device.deviceid+',dim'+dimval+'\n');
+						device.dimval=dimval;
+						updateDimStatus(device);
+					}
+					else {
+						clog("bad dim val: " + dimval)
+					}
+				}
 				break;
 		}
 		res.send('Message sent.');
@@ -140,24 +162,24 @@ app.get('/device/:id/:dothis', function(req, res){
 });
 
 
-function flashToggle(id) {
-	if(devices[id].devicestatus=="On") {
-		clog('sending turnOff to '+id+'(due to flashing)')
-		devices[id].socket.write('turnOff\n');
-		devices[id].devicestatus="Off";
+function flashToggle(device) {
+	if(device.devicestatus=="On") {
+		clog('sending turnOff to '+device.deviceid+'(due to flashing)')
+		device.socket.write(device.deviceid+',turnOff\n');
+		device.devicestatus="Off";
 	}
 	else {
-		clog('sending turnOn to '+id+'(due to flashing)')
-		devices[id].devicestatus="On";
-		devices[id].socket.write('turnOn\n');
+		clog('sending turnOn to '+device.deviceid+'(due to flashing)')
+		device.devicestatus="On";
+		device.socket.write(device.deviceid+',turnOn\n');
 	};
-	updateStatus(devices[id]);
+	updateStatus(device);
 }
 
 function updateFlashStatus(device) {
 	clients.map(function(client) {
 			client.emit('flashstatuschange', {
-				devicename: device.devicename,
+				deviceid: device.deviceid,
 				flashstatus: device.flashstatus
 			});
 	});
@@ -166,8 +188,17 @@ function updateFlashStatus(device) {
 function updateStatus(device) {
 	clients.map(function(client) {
 			client.emit('statuschange', {
-				devicename: device.devicename,
+				deviceid: device.deviceid,
 				devicestatus: device.devicestatus
+			});
+	});
+};
+
+function updateDimStatus(device) {
+	clients.map(function(client) {
+			client.emit('dimstatuschange', {
+				deviceid: device.deviceid,
+				dimval: device.dimval
 			});
 	});
 };
@@ -175,16 +206,17 @@ function updateStatus(device) {
 function addDevice(device) {
 	clients.map(function(client) {
 			client.emit('adddevice', {
-				devicename: device.devicename,
+				deviceid: device.deviceid,
 				devicestatus: device.devicestatus,
-				flashstatus: device.flashstatus
+				flashstatus: device.flashstatus,
+				dimval: device.dimval
 			});
 	});
 };
 
 function removeDevice(device) {
 	clients.map(function(client) {
-			client.emit('removedevice', {devicename: device.devicename});
+			client.emit('removedevice', {deviceid: device.deviceid});
 	});
 };
 
@@ -218,12 +250,11 @@ server = net.createServer(function(socket) {
 	socket.devices = [];
 
 	socket.on('close', function() {
-		devicename = socket.devices.pop()
+		deviceid = socket.devices.pop()
 		
-		while(devicename) {
-			clog("hereeeeee")
-			deleteDevice(devicename);
-			devicename = socket.devices.pop()
+		while(deviceid) {
+			deleteDevice(deviceid);
+			deviceid = socket.devices.pop()
 		}
 		clog('TCP client disconnected');
 	});
@@ -252,10 +283,10 @@ server.listen(1307, function() {
 
 devices = {};
 
-deleteDevice = function(devicename) {
-	clog("deleting" + devicename)
-	removeDevice(devices[devicename]);
-	delete devices[devicename];
+deleteDevice = function(deviceid) {
+	clog("Deleting " + deviceid)
+	removeDevice(devices[deviceid]);
+	delete devices[deviceid];
 };
 
 // Process messages
@@ -264,26 +295,55 @@ process = function (message, socket) {
 	clog("Processing message: " + message);
 	//sockets[message] = socket;
 
-	var msgobj = JSON.parse(message);
+	var failure = false;
+	try {
+		var msgobj = JSON.parse(message);
+	}
+	catch (SyntaxError) {
+		failure = true;
+		clog("failed to process - bad syntax");
+		return;
+	}
 
-	devicename = msgobj.devicename
-	devicestatus = msgobj.devicestatus
-	flashstatus = "NotFlashing"
+	enoughinfo = (
+		msgobj.hasOwnProperty('deviceid')
+	)
+	if(!enoughinfo) {
+		clog("not enough info");
+		return;
+	}
 
-	devices[devicename] = {
-		devicename: devicename,
+	// well formed input - add device to list of devices
+	var deviceid = msgobj.deviceid
+	if(msgobj.devicestatus==1) {
+		devicestatus = "On"
+	}
+	else {
+		devicestatus = "Off"
+	}
+	var flashstatus = "NotFlashing";
+	var devicetype = msgobj.devicetype;
+	var dimval = 255;
+
+	devices[deviceid] = {
+		deviceid: deviceid,
+		devicetype: devicetype,
 		devicestatus: devicestatus,
 		flashstatus: flashstatus,
+		dimval: dimval,
 		socket: socket,
 	};
 
-	socket.devices.push(devicename);
+	socket.devices.push(deviceid);
 
 	addDevice({
-		devicename: devicename,
+		deviceid: deviceid,
 		devicestatus: devicestatus,
-		flashstatus: flashstatus
+		flashstatus: flashstatus,
+		dimval: dimval
 	});
+	clog("Added: " + deviceid)
+
 
 
 	// if we get a status
@@ -297,10 +357,14 @@ io.sockets.on('connection', function (iosocket) {
 	clients.push(iosocket);
 	for (var id in devices) {
 		device = devices[id];
-		clog("emitting to " + device.devicename);
+		clog("emitting to " + device.deviceid);
 		iosocket.emit('statuschange', {
-				devicename: device.devicename,
+				deviceid: device.deviceid,
 				devicestatus: device.devicestatus
+		});
+		iosocket.emit('dimstatuschange', {
+				deviceid: device.deviceid,
+				dimval: device.dimval
 		});
 	};
 	iosocket.on('disconnect', function () {

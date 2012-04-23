@@ -3,6 +3,27 @@ $(document).ready(function() {
 	$('a.togbutton').click(bindToggle);
 	$('a.flashbutton').click(bindFlash);
 	$('a.stopflashbutton').click(bindStopFlash);
+	$('a.dimbutton').click(bindSendDim);
+
+	var slideparam = {
+			value:255,
+			min: 0,
+			max: 256,
+			step: 4,
+			slide: function( event, ui ) {
+				var deviceid = $(this).attr("deviceid")
+				$('.dimvalp[deviceid="'+deviceid+'"]').text(ui.value);
+				$.ajax('/device/' + deviceid + '/dim'+ui.value);
+			}
+	}
+
+	$('.dimslider').slider(slideparam);
+	$('.dimslider').each( function() {
+		var initval = $(this).attr("initval");
+		if (initval) {
+			$(this).slider("value", initval);
+		}
+	});
 
 	var socket = io.connect('http://localhost', {
 		reconnect: false
@@ -13,16 +34,25 @@ $(document).ready(function() {
 	});
 	
 	socket.on('statuschange', function (statusobj) {
-		devicename = statusobj["devicename"];
+		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
+		var deviceid = statusobj["deviceid"];
 		devicestatus = statusobj["devicestatus"];
-		$('td[devicename="'+devicename+'"]').attr('devicestatus', devicestatus)
+		$('td[deviceid="'+deviceid+'"]').attr('devicestatus', devicestatus)
 	});
 	
+	socket.on('dimstatuschange', function (statusobj) {
+		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
+		var deviceid = statusobj["deviceid"];
+		var dimval = statusobj["dimval"];
+		$('.dimvalp[deviceid="'+deviceid+'"]').text(dimval);
+		$('.dimslider[deviceid="'+deviceid+'"]').slider("value", dimval)
+	});
+
 	socket.on('flashstatuschange', function (statusobj) {
-		devicename = statusobj["devicename"];
+		deviceid = statusobj["deviceid"];
 		flashstatus = statusobj["flashstatus"];
 		if (flashstatus == "Flashing") {
-			fbutton = $('a.fbutton[devicename="'+devicename+'"]')
+			fbutton = $('a.fbutton[deviceid="'+deviceid+'"]')
 			fbutton.removeClass('flashbutton');
 			fbutton.addClass('stopflashbutton');
 			fbutton.text("StopFlash");
@@ -30,7 +60,7 @@ $(document).ready(function() {
 			fbutton.click(bindStopFlash)
 		}
 		else {
-			fbutton = $('a.fbutton[devicename="'+devicename+'"]')
+			fbutton = $('a.fbutton[deviceid="'+deviceid+'"]')
 			fbutton.removeClass('stopflashbutton');
 			fbutton.addClass('flashbutton');
 			fbutton.text("Flash");
@@ -40,20 +70,20 @@ $(document).ready(function() {
 	});
 
 	socket.on('adddevice', function (deviceobj) {
-		last = $('tr').last()
+		var last = $('tr').last()
     	var newrow = last.clone();
     	
-    	devicon = newrow.find('td.devicon')
-    	devicon.attr('devicename', deviceobj.devicename)
+    	var devicon = newrow.find('td.devicon')
+    	devicon.attr('deviceid', deviceobj.deviceid)
     	devicon.attr('devicestatus', deviceobj.devicestatus)
-    	devicon.text(deviceobj.devicename)
+    	devicon.text(deviceobj.deviceid)
     	
-    	togbutton = newrow.find('a.togbutton')
-    	togbutton.attr('devicename', deviceobj.devicename)
+    	var togbutton = newrow.find('a.togbutton')
+    	togbutton.attr('deviceid', deviceobj.deviceid)
     	togbutton.click(bindToggle)
     	
-		fbutton = newrow.find('a.fbutton')
-    	fbutton.attr('devicename', deviceobj.devicename)
+		var fbutton = newrow.find('a.fbutton')
+    	fbutton.attr('deviceid', deviceobj.deviceid)
     	if (deviceobj.flashstatus == "Flashing") {
 			fbutton.addClass('stopflashbutton');
 			fbutton.text("StopFlash")
@@ -65,12 +95,19 @@ $(document).ready(function() {
 			fbutton.click(bindFlash)
 		};
 
+		var dimslider = newrow.find('.dimslider');
+		dimslider.attr('deviceid', deviceobj.deviceid)
+		dimslider.slider(slideparam);
+
+		var dimvalp = newrow.find('.dimvalp');
+		dimvalp.attr('deviceid', deviceobj.deviceid)
+
     	last.before(newrow)
 	});
 
 	socket.on('removedevice', function (deviceobj) {
-		devicename = deviceobj["devicename"];
-		$('td[devicename="'+devicename+'"]').parent().remove()
+		deviceid = deviceobj["deviceid"];
+		$('td[deviceid="'+deviceid+'"]').parent().remove()
 	});
 
 	socket.on('disconnect', function() {
@@ -81,18 +118,25 @@ $(document).ready(function() {
 
 function bindToggle(e) {
 	e.preventDefault();
-	devicename = $(this).attr('devicename');
-	$.ajax('/device/' + devicename + '/toggle');		
+	deviceid = $(this).attr('deviceid');
+	$.ajax('/device/' + deviceid + '/toggle');		
 };
 
 function bindFlash(e) {
 	e.preventDefault();
-	devicename = $(this).attr('devicename');
-	$.ajax('/device/' + devicename + '/flash');		
+	deviceid = $(this).attr('deviceid');
+	$.ajax('/device/' + deviceid + '/flash');		
 };
 
 function bindStopFlash(e) {
 	e.preventDefault();
-	devicename = $(this).attr('devicename');
-	$.ajax('/device/' + devicename + '/stopflash');		
+	deviceid = $(this).attr('deviceid');
+	$.ajax('/device/' + deviceid + '/stopflash');		
+};
+
+function bindSendDim(e) {
+	e.preventDefault();
+	deviceid = $(this).attr('deviceid');
+	dimval = $(this).attr('dimval');
+	$.ajax('/device/' + deviceid + '/dim'+dimval);		
 };
