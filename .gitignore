@@ -1,6 +1,2 @@
 node_modules
 *.pem
-public/javascripts/jquery-ui.min.js
-public/javascripts/jquery.min.js
-public/stylesheets/jquery-ui.css
-public/stylesheets/ui.theme.css

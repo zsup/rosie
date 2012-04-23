@@ -25,7 +25,7 @@ $(document).ready(function() {
 		}
 	});
 
-	var socket = io.connect('http://localhost', {
+	var socket = io.connect('/', {
 		reconnect: false
 	});
 

@@ -354,6 +354,7 @@ process = function (message, socket) {
 clients = [];
 
 io.sockets.on('connection', function (iosocket) {
+	clog("got new socket");
 	clients.push(iosocket);
 	for (var id in devices) {
 		device = devices[id];
