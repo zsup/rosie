@@ -17,27 +17,27 @@ div.navbar.navbar-fixed-top
 
 div.container
 	div.row.clone(deviceid="")
-		div.span1.devtitle &nbsp;
+		div.span2.devtitle &nbsp;
 		div.span1.devtype &nbsp;
 		div.span1.devicon(devicestatus="", deviceid="") &nbsp;
-		div.span2
-			a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
-		div.span2
-			a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
-		div.span5.sliderouter
+		div.span3
+			div.btn-group
+				a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
+				a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
+		div.span5
 			div.dimslider(deviceid="", initval="")
 	each device in devices
 		div.row(deviceid=device.deviceid)
-			div.span1.devtitle= device.deviceid
+			div.span2.devtitle= device.deviceid
 			div.span1.devtype= device.devicetype
 			div.span1.devicon(devicestatus=device.devicestatus, deviceid=device.deviceid) &nbsp;
-			div.span2
-				a.btn.btn-large.btn-primary.togbutton(deviceid=device.deviceid, href="#") Toggle
-			div.span2
-				if device.flashstatus != "Flashing"
-					a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid=device.deviceid, href="#") Flash
-				else
-					a.btn.btn-large.btn-primary.active.fbutton.stopflashbutton(deviceid=device.deviceid, href="#") Flash
-			div.span5.sliderouter
+			div.span3
+				div.btn-group
+					a.btn.btn-large.btn-primary.togbutton(deviceid=device.deviceid, href="#") Toggle
+					if device.flashstatus != "Flashing"
+						a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid=device.deviceid, href="#") Flash
+					else
+						a.btn.btn-large.btn-primary.active.fbutton.stopflashbutton(deviceid=device.deviceid, href="#") Flash
+			div.span5
 				div.dimslider(deviceid=device.deviceid, initval=device.dimval)
 

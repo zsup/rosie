@@ -52,7 +52,7 @@ $(document).ready(function() {
 		deviceid = statusobj["deviceid"];
 		flashstatus = statusobj["flashstatus"];
 		if (flashstatus == "Flashing") {
-			fbutton = $('a.fbutton[deviceid="'+deviceid+'"]')
+			fbutton = $('a.fbutton[deviceid=\"'+deviceid+'\"]')
 			fbutton.removeClass('flashbutton');
 			fbutton.addClass('stopflashbutton');
 			fbutton.addClass('active');
