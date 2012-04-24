@@ -30,7 +30,7 @@ $(document).ready(function() {
 	});
 
 	socket.on('connect', function () {
-		$('.srvr').addClass('srvrok');
+		$('.brand').addClass('srvrok');
 	});
 	
 	socket.on('statuschange', function (statusobj) {
@@ -111,7 +111,7 @@ $(document).ready(function() {
 	});
 
 	socket.on('disconnect', function() {
-		$('body').css('background-color', "#f00");
+		$('brand').removeClass('pulsar');
 	})
 
 });

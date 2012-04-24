@@ -1,33 +1,45 @@
-//a.switchy(href="#") switch
+div.navbar.navbar-fixed-top
+	div.navbar-inner
+		div.container
+			a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
+				span.icon-bar
+				span.icon-bar
+				span.icon-bar
+			a.brand.pulsar(href="#") Switch
+			div.nav-collapse
+				ul.nav
+					li.active
+						a(href="#") Home
+					li
+						a(href="#") About
+					li
+						a(href="#") Contact
 
-div.srvr server
-
-table
-	each device in devices
-		tr
-			td.devicon(devicestatus=device.devicestatus, deviceid=device.deviceid)= device.deviceid
-			td
-				a.togbutton(deviceid=device.deviceid,
-				href="#") Toggle
-			td
-				if device.flashstatus == "Flashing"
-					a.fbutton.stopflashbutton(deviceid=device.deviceid,
-					href="#") Stop Flash
-				else
-					a.fbutton.flashbutton(deviceid=device.deviceid,
-					href="#") Flash
-			td.sliderouter
-				div.dimslider(deviceid=device.deviceid, initval=device.dimval)
-			td.dimvalbox
-				p.dimvalp(deviceid=device.deviceid)= device.dimval
-	tr
-		td.devicon
-		td
-			a.togbutton(href="#") Toggle
-		td
-			a.fbutton(href="#") Flash
-		td.sliderouter
-			div.dimslider
-		td.dimvalbox
-			p.dimvalp 255
+div.container
+	table
+		each device in devices
+			tr
+				td.devicon(devicestatus=device.devicestatus, deviceid=device.deviceid)= device.deviceid
+				td
+					a.togbutton(deviceid=device.deviceid, href="#") Toggle
+				td
+					if device.flashstatus == "Flashing"
+						a.fbutton.stopflashbutton(deviceid=device.deviceid,href="#") Stop Flash
+					else
+						a.fbutton.flashbutton(deviceid=device.deviceid,
+						href="#") Flash
+				td.sliderouter
+					div.dimslider(deviceid=device.deviceid, initval=device.dimval)
+				td.dimvalbox
+					p.dimvalp(deviceid=device.deviceid)= device.dimval
+			tr
+				td.devicon
+				td
+					a.togbutton(href="#") Toggle
+				td
+					a.fbutton(href="#") Flash
+				td.sliderouter
+					div.dimslider
+				td.dimvalbox
+					p.dimvalp 255
 
