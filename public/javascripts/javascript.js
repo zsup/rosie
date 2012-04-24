@@ -30,7 +30,7 @@ $(document).ready(function() {
 	});
 
 	socket.on('connect', function () {
-		$('.brand').addClass('srvrok');
+		// $('.brand').addClass('srvrok');
 	});
 	
 	socket.on('statuschange', function (statusobj) {

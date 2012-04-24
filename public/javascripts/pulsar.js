@@ -1,8 +1,8 @@
 $(document).ready(function() {
 	var properties = {
-		opacity: 0.2
+		opacity: 0.5
 	};
-	$('.pulsar').pulse(properties,4000,1000,2000);
+	$('.pulsar').pulse(properties,4000,1000);
 });
 
 $(function() {
