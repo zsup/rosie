@@ -107,3 +107,7 @@ a.switchy:active {
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 }
+
+.clone {
+	display: none;
+}

@@ -16,9 +16,19 @@ div.navbar.navbar-fixed-top
 						a(href="#") Contact
 
 div.container
+	div.row.clone(deviceid="")
+		div.span1.devtitle &nbsp;
+		div.span1.devtype &nbsp;
+		div.span1.devicon &nbsp;
+		div.span2
+			a.btn.btn-large.btn-primary.togbutton(href="#") Toggle
+		div.span2
+			a.btn.btn-large.btn-primary.fbutton.flashbutton(href="#") Flash
+		div.span5.sliderouter
+			div.dimslider
 	each device in devices
-		div.row
-			div.span1.title= device.deviceid
+		div.row(deviceid=device.deviceid)
+			div.span1.devtitle= device.deviceid
 			div.span1.devtype= device.devicetype
 			div.span1.devicon(devicestatus=device.devicestatus, deviceid=device.deviceid) &nbsp;
 			div.span2
