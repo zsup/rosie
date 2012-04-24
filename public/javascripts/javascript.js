@@ -37,7 +37,7 @@ $(document).ready(function() {
 		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
 		var deviceid = statusobj["deviceid"];
 		devicestatus = statusobj["devicestatus"];
-		$('td[deviceid="'+deviceid+'"]').attr('devicestatus', devicestatus)
+		$('div[deviceid="'+deviceid+'"]').attr('devicestatus', devicestatus)
 	});
 	
 	socket.on('dimstatuschange', function (statusobj) {
@@ -55,17 +55,17 @@ $(document).ready(function() {
 			fbutton = $('a.fbutton[deviceid="'+deviceid+'"]')
 			fbutton.removeClass('flashbutton');
 			fbutton.addClass('stopflashbutton');
-			fbutton.text("StopFlash");
+			fbutton.addClass('active');
 			fbutton.unbind('click');
-			fbutton.click(bindStopFlash)
+			fbutton.click(bindStopFlash);
 		}
 		else {
 			fbutton = $('a.fbutton[deviceid="'+deviceid+'"]')
 			fbutton.removeClass('stopflashbutton');
 			fbutton.addClass('flashbutton');
-			fbutton.text("Flash");
+			fbutton.removeClass('active');
 			fbutton.unbind('click');
-			fbutton.click(bindFlash)
+			fbutton.click(bindFlash);
 		};
 	});
 

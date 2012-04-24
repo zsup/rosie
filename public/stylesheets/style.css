@@ -28,34 +28,6 @@ a.switchy:active {
 	-webkit-transition: all 0.5s;	
 }
 
-td {
-	font-family: Futura, Helvetica, Arial, sans-serif;
-	font-weight: 500;
-	font-size: 24px;
-	padding: 20px;
-}
-
-td[devicestatus="On"] {
-	background-color: #fff;
-}
-
-td[devicestatus="Off"] {
-	background-color: #000;
-	color: #fff;
-}
-
-tr:last-child {
-	display: none;
-}
-
-.srvr {
-	display: block;
-	width: 100px;
-	height: 100px;
-	border: 1px solid black;
-}
-
-
 .srvrok {
 	background-color: #0f0;
 }
@@ -78,4 +50,18 @@ tr:last-child {
   text-transform: uppercase;
   letter-spacing:2px;
   text-shadow: 0 0 20px white;
+}
+
+.devicon {
+	height:48px;
+}
+
+.devicon[devicestatus="On"] {
+	background-image: url('/images/lightbulb48px.png');
+	background-repeat: no-repeat;
+}
+
+.devicon[devicestatus="Off"] {
+	background-image: url('/images/bulb48px.png');
+	background-repeat: no-repeat;
 }
