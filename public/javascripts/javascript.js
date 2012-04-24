@@ -73,7 +73,7 @@ $(document).ready(function() {
 		var last = $('.row').last();
     	var newrow = last.clone();
 
-		if (newRow.hasClass('clone')) {
+		if (newrow.hasClass('clone')) {
 			newrow.removeClass('clone');
 		}
 		
@@ -118,12 +118,12 @@ $(document).ready(function() {
 		dimslider.slider(slideparam);
 
     	last.after(newrow);
-		newrow.show();
 	});
 
 	socket.on('removedevice', function (deviceobj) {
-		deviceid = deviceobj["deviceid"];
-		$('.row.'deviceid).remove()
+		deviceid = deviceobj.deviceid;
+		oldrow = ".row[deviceid=\"" + deviceid + "\"]";
+		$(oldrow).remove();
 	});
 
 	socket.on('disconnect', function() {

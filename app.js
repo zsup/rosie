@@ -207,6 +207,7 @@ function addDevice(device) {
 	clients.map(function(client) {
 			client.emit('adddevice', {
 				deviceid: device.deviceid,
+				devicetype: device.devicetype,
 				devicestatus: device.devicestatus,
 				flashstatus: device.flashstatus,
 				dimval: device.dimval
@@ -314,7 +315,7 @@ process = function (message, socket) {
 	}
 
 	// well formed input - add device to list of devices
-	var deviceid = msgobj.deviceid
+	var deviceid = msgobj.deviceid;
 	if(msgobj.devicestatus==1) {
 		devicestatus = "On"
 	}
@@ -338,6 +339,7 @@ process = function (message, socket) {
 
 	addDevice({
 		deviceid: deviceid,
+		devicetype: devicetype,
 		devicestatus: devicestatus,
 		flashstatus: flashstatus,
 		dimval: dimval

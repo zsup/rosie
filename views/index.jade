@@ -5,7 +5,7 @@ div.navbar.navbar-fixed-top
 				span.icon-bar
 				span.icon-bar
 				span.icon-bar
-			a.brand.pulsar(href="#")
+			a.brand(href="#")
 			div.nav-collapse
 				ul.nav
 					li.active
@@ -19,13 +19,13 @@ div.container
 	div.row.clone(deviceid="")
 		div.span1.devtitle &nbsp;
 		div.span1.devtype &nbsp;
-		div.span1.devicon &nbsp;
+		div.span1.devicon(devicestatus="", deviceid="") &nbsp;
 		div.span2
-			a.btn.btn-large.btn-primary.togbutton(href="#") Toggle
+			a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
 		div.span2
-			a.btn.btn-large.btn-primary.fbutton.flashbutton(href="#") Flash
+			a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
 		div.span5.sliderouter
-			div.dimslider
+			div.dimslider(deviceid="", initval="")
 	each device in devices
 		div.row(deviceid=device.deviceid)
 			div.span1.devtitle= device.deviceid
