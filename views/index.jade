@@ -29,7 +29,8 @@ div.container
 					else
 						a.btn.btn-large.btn-primary.active.fbutton.stopflashbutton(deviceid=device.deviceid, href="#") Flash
 			div.span5
-				div.dimslider(deviceid=device.deviceid, initval=device.dimval)
+				if device.devicetype == "LED"
+					div.dimslider(deviceid=device.deviceid, initval=device.dimval)
 	div.row.clone(deviceid="")
 		div.span2.devtitle &nbsp;
 		div.span1.devtype &nbsp;

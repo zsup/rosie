@@ -70,12 +70,9 @@ $(document).ready(function() {
 	});
 
 	socket.on('adddevice', function (deviceobj) {
-		var last = $('.row').last();
-    	var newrow = last.clone();
-
-		if (newrow.hasClass('clone')) {
-			newrow.removeClass('clone');
-		}
+		var cloner = $('.clone');
+    	var newrow = cloner.clone();
+		newrow.removeClass('clone');
 		
 		newrow.attr('deviceid', deviceobj.deviceid);
 
@@ -113,15 +110,20 @@ $(document).ready(function() {
 		};
 
 		var dimslider = newrow.find('.dimslider');
-		dimslider.attr('deviceid', deviceobj.deviceid);
-		dimslider.attr('initval', deviceobj.dimval);
-		dimslider.slider(slideparam);
+		if (deviceobj.devicetype == "LED") {
+			dimslider.attr('deviceid', deviceobj.deviceid);
+			dimslider.attr('initval', deviceobj.dimval);
+			dimslider.slider(slideparam);
+		}
+		else {
+			dimslider.remove();
+		}
 		
 		newrow.css({
 			'opacity' : 0,
 			'top' : '-20px',
 		});
-    	last.before(newrow);
+    	cloner.before(newrow);
 		newrow.animate({
 			'opacity' : 1,
 			'top' : '0px'
