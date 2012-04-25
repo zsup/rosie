@@ -20,7 +20,9 @@ div.container
 		div.row(deviceid=device.deviceid)
 			div.span2.devtitle= device.deviceid
 			div.span1.devtype= device.devicetype
-			div.span1.devicon(devicestatus=device.devicestatus, deviceid=device.deviceid) &nbsp;
+			div.span1.iconbox
+				img.deviconbg(devicestatus=device.devicestatus, deviceid=device.deviceid, src="/images/bulbglow54.png", style="opacity:"+device.dimval/255)
+				img.devicon(src="/images/bulb54.png")
 			div.span3
 				div.btn-group
 					a.btn.btn-large.btn-primary.togbutton(deviceid=device.deviceid, href="#") Toggle
@@ -34,7 +36,9 @@ div.container
 	div.row.clone(deviceid="")
 		div.span2.devtitle &nbsp;
 		div.span1.devtype &nbsp;
-		div.span1.devicon(devicestatus="", deviceid="") &nbsp;
+		div.span1.iconbox
+			img.deviconbg(src="/images/bulbglow54.png", deviceid="")
+			img.devicon(src="/images/bulb54.png")
 		div.span3
 			div.btn-group
 				a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
