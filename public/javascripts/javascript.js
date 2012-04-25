@@ -37,7 +37,7 @@ $(document).ready(function() {
 		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
 		var deviceid = statusobj["deviceid"];
 		devicestatus = statusobj["devicestatus"];
-		$('div[deviceid="'+deviceid+'"]').attr('devicestatus', devicestatus)
+		$('.deviconbg[deviceid="'+deviceid+'"]').attr('devicestatus', devicestatus)
 	});
 	
 	socket.on('dimstatuschange', function (statusobj) {
@@ -46,6 +46,7 @@ $(document).ready(function() {
 		var dimval = statusobj["dimval"];
 		$('.dimvalp[deviceid="'+deviceid+'"]').text(dimval);
 		$('.dimslider[deviceid="'+deviceid+'"]').slider("value", dimval)
+		$('.deviconbg[deviceid="'+deviceid+'"]').css("opacity", dimval/255)
 	});
 
 	socket.on('flashstatuschange', function (statusobj) {
@@ -85,9 +86,9 @@ $(document).ready(function() {
 		var devtype = newrow.find('.devtype');
 		devtype.text(deviceobj.devicetype);
     	
-    	var devicon = newrow.find('.devicon')
-    	devicon.attr('deviceid', deviceobj.deviceid);
-    	devicon.attr('devicestatus', deviceobj.devicestatus);
+    	var deviconbg = newrow.find('.deviconbg')
+    	deviconbg.attr('deviceid', deviceobj.deviceid);
+    	deviconbg.attr('devicestatus', deviceobj.devicestatus);
     	
     	var togbutton = newrow.find('a.togbutton')
     	togbutton.attr('deviceid', deviceobj.deviceid)

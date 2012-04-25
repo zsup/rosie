@@ -43,18 +43,30 @@ a.switchy:active {
   padding: 0;
 }
 
+.iconbox {
+	height:68px;
+	position: relative;
+}
+
+.deviconbg {
+	position: absolute;
+	z-index: -1;
+}
+
 .devicon {
-	height:48px;
+	position: absolute;
 }
 
-.devicon[devicestatus="On"] {
-	background-image: url('/images/lightbulb48px.png');
-	background-repeat: no-repeat;
-}
 
-.devicon[devicestatus="Off"] {
-	background-image: url('/images/bulb48px.png');
+/*.devicon[devicestatus="On"] {
+	background-image: url('/images/bulbglow54.png');
 	background-repeat: no-repeat;
+}*/
+
+.deviconbg[devicestatus="Off"] {
+	/*background-image: url('/images/bulb48px.png');*/
+	/*background-repeat: no-repeat;*/
+	display: none;
 }
 
 .dimslider {
