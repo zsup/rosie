@@ -116,18 +116,31 @@ $(document).ready(function() {
 		dimslider.attr('deviceid', deviceobj.deviceid);
 		dimslider.attr('initval', deviceobj.dimval);
 		dimslider.slider(slideparam);
-
-    	last.after(newrow);
+		
+		newrow.css({
+			'opacity' : 0,
+			'top' : '-20px',
+		});
+    	last.before(newrow);
+		newrow.animate({
+			'opacity' : 1,
+			'top' : '0px'
+		});
 	});
 
 	socket.on('removedevice', function (deviceobj) {
 		deviceid = deviceobj.deviceid;
-		oldrow = ".row[deviceid=\"" + deviceid + "\"]";
-		$(oldrow).remove();
+		var oldrow = $(".row[deviceid=\"" + deviceid + "\"]");
+		oldrow.animate({
+			'opacity' : 0,
+			'top' : '-20px'
+		}, function() {
+			oldrow.remove();
+		});
 	});
 
 	socket.on('disconnect', function() {
-		$('brand').removeClass('pulsar');
+		// TBD
 	})
 
 });

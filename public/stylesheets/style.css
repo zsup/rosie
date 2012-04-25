@@ -124,3 +124,12 @@ a.switchy:active {
 .dimslider {
 	margin-top: 18px;
 }
+
+.row {
+	position: relative;
+	margin-top: 20px;
+}
+
+.row:first-child {
+	margin-top: 0;
+}

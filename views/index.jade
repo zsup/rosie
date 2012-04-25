@@ -16,16 +16,6 @@ div.navbar.navbar-fixed-top
 						a(href="#") Contact
 
 div.container
-	div.row.clone(deviceid="")
-		div.span2.devtitle &nbsp;
-		div.span1.devtype &nbsp;
-		div.span1.devicon(devicestatus="", deviceid="") &nbsp;
-		div.span3
-			div.btn-group
-				a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
-				a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
-		div.span5
-			div.dimslider(deviceid="", initval="")
 	each device in devices
 		div.row(deviceid=device.deviceid)
 			div.span2.devtitle= device.deviceid
@@ -40,4 +30,13 @@ div.container
 						a.btn.btn-large.btn-primary.active.fbutton.stopflashbutton(deviceid=device.deviceid, href="#") Flash
 			div.span5
 				div.dimslider(deviceid=device.deviceid, initval=device.dimval)
-
+	div.row.clone(deviceid="")
+		div.span2.devtitle &nbsp;
+		div.span1.devtype &nbsp;
+		div.span1.devicon(devicestatus="", deviceid="") &nbsp;
+		div.span3
+			div.btn-group
+				a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
+				a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
+		div.span5
+			div.dimslider(deviceid="", initval="")

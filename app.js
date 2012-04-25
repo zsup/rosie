@@ -251,11 +251,11 @@ server = net.createServer(function(socket) {
 	socket.devices = [];
 
 	socket.on('close', function() {
-		deviceid = socket.devices.pop()
+		device = socket.devices.pop();
 		
-		while(deviceid) {
-			deleteDevice(deviceid);
-			deviceid = socket.devices.pop()
+		while(device) {
+			deleteDevice(device);
+			device = socket.devices.pop();
 		}
 		clog('TCP client disconnected');
 	});
@@ -284,10 +284,10 @@ server.listen(1307, function() {
 
 devices = {};
 
-deleteDevice = function(deviceid) {
-	clog("Deleting " + deviceid)
-	removeDevice(devices[deviceid]);
-	delete devices[deviceid];
+deleteDevice = function(device) {
+	clog("Deleting " + device)
+	removeDevice(devices[device]);
+	delete devices[device];
 };
 
 // Process messages
