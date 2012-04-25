@@ -127,9 +127,5 @@ a.switchy:active {
 
 .row {
 	position: relative;
-	margin-top: 20px;
-}
-
-.row:first-child {
-	margin-top: 0;
+	margin-bottom: 20px;
 }

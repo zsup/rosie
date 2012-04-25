@@ -131,7 +131,7 @@ app.get('/device/:deviceid/:dothis', function(req, res){
 					break;
 				}
 			case "stopflash":
-				clearInterval(device.flashID)
+				clearInterval(device.flashID);
 				delete device.flashID;
 				device.flashstatus = "NotFlashing";
 				updateFlashStatus(device);
@@ -214,6 +214,18 @@ function addDevice(device) {
 			});
 	});
 };
+
+function updateDevice(device) {
+	clients.map(function(client) {
+			client.emit('updatedevice', {
+				deviceid: device.deviceid,
+				devicetype: device.devicetype,
+				devicestatus: device.devicestatus,
+				flashstatus: device.flashstatus,
+				dimval: device.dimval
+			});
+	});
+}
 
 function removeDevice(device) {
 	clients.map(function(client) {
@@ -322,30 +334,45 @@ process = function (message, socket) {
 	else {
 		devicestatus = "Off"
 	}
-	var flashstatus = "NotFlashing";
+	
 	var devicetype = msgobj.devicetype;
-	var dimval = 255;
-
-	devices[deviceid] = {
-		deviceid: deviceid,
-		devicetype: devicetype,
-		devicestatus: devicestatus,
-		flashstatus: flashstatus,
-		dimval: dimval,
-		socket: socket,
-	};
-
-	socket.devices.push(deviceid);
-
-	addDevice({
-		deviceid: deviceid,
-		devicetype: devicetype,
-		devicestatus: devicestatus,
-		flashstatus: flashstatus,
-		dimval: dimval
-	});
-	clog("Added: " + deviceid)
-
+	var flashstatus;
+	var dimval;
+	
+	currentdevice = devices[deviceid];
+	
+	if (!currentdevice) {
+		flashstatus = "NotFlashing";
+		dimval = 255;
+		addDevice({
+			deviceid: deviceid,
+			devicetype: devicetype,
+			devicestatus: devicestatus,
+			flashstatus: flashstatus,
+			dimval: dimval
+		});
+		clog("Added: " + deviceid);
+		// TODO: This will cause an error if the same device connects through multiple sockets. Fix it.
+		socket.devices.push(deviceid);
+		devices[deviceid] = {
+			deviceid: deviceid,
+			devicetype: devicetype,
+			devicestatus: devicestatus,
+			flashstatus: flashstatus,
+			dimval: dimval,
+			socket: socket,
+		};
+	}
+	else {
+		updateDevice({
+			deviceid: deviceid,
+			devicetype: devicetype,
+			devicestatus: devicestatus,	
+		});
+		currentdevice[devicetype] = devicetype;
+		currentdevice[devicestatus] = devicestatus;
+		clog("Updated: " + deviceid);
+	}
 
 
 	// if we get a status

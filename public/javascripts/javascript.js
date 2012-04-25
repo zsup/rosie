@@ -125,7 +125,22 @@ $(document).ready(function() {
 		newrow.animate({
 			'opacity' : 1,
 			'top' : '0px'
-		});
+		},800);
+	});
+	
+	socket.on('updatedevice', function (deviceobj) {
+		var deviceid = deviceobj.deviceid;
+		var row = $(".row[deviceid=\"" + deviceid + "\"]");
+		
+		var devtype = row.find('.devtype');
+		devtype.text(deviceobj.devicetype);
+    	
+    	var devicon = row.find('.devicon')
+    	devicon.attr('deviceid', deviceobj.deviceid);
+    	devicon.attr('devicestatus', deviceobj.devicestatus);
+    	
+    	var togbutton = row.find('a.togbutton');
+    	togbutton.attr('deviceid', deviceobj.deviceid);
 	});
 
 	socket.on('removedevice', function (deviceobj) {
@@ -133,9 +148,11 @@ $(document).ready(function() {
 		var oldrow = $(".row[deviceid=\"" + deviceid + "\"]");
 		oldrow.animate({
 			'opacity' : 0,
-			'top' : '-20px'
-		}, function() {
-			oldrow.remove();
+			'top' : '-20px',
+		}, 400, 'linear', function() {
+			oldrow.hide(400, function() {
+				oldrow.remove();
+			});
 		});
 	});
 
