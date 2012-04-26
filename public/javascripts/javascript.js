@@ -138,9 +138,8 @@ $(document).ready(function() {
 		var devtype = row.find('.devtype');
 		devtype.text(deviceobj.devicetype);
     	
-    	var devicon = row.find('.devicon')
-    	devicon.attr('deviceid', deviceobj.deviceid);
-    	devicon.attr('devicestatus', deviceobj.devicestatus);
+    	var deviconbg = row.find('.deviconbg')
+    	deviconbg.attr('devicestatus', deviceobj.devicestatus);
     	
     	var togbutton = row.find('a.togbutton');
     	togbutton.attr('deviceid', deviceobj.deviceid);

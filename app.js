@@ -222,7 +222,8 @@ function updateDevice(device) {
 				devicetype: device.devicetype,
 				devicestatus: device.devicestatus,
 				flashstatus: device.flashstatus,
-				dimval: device.dimval
+				dimval: device.dimval,
+				socket: device.socket
 			});
 	});
 }
@@ -262,6 +263,8 @@ server = net.createServer(function(socket) {
 
 	socket.devices = [];
 
+	// TODO: Rewrite this so it searches for all devices with the socket 'socket' and deletes them.
+	// Then, get rid of all of the references to socket.devices[].
 	socket.on('close', function() {
 		device = socket.devices.pop();
 		
@@ -306,7 +309,6 @@ deleteDevice = function(device) {
 process = function (message, socket) {
 	message = message.trim();
 	clog("Processing message: " + message);
-	//sockets[message] = socket;
 
 	var failure = false;
 	try {
@@ -339,7 +341,7 @@ process = function (message, socket) {
 	var flashstatus;
 	var dimval;
 	
-	currentdevice = devices[deviceid];
+	var currentdevice = devices[deviceid]
 	
 	if (!currentdevice) {
 		flashstatus = "NotFlashing";
@@ -360,17 +362,28 @@ process = function (message, socket) {
 			devicestatus: devicestatus,
 			flashstatus: flashstatus,
 			dimval: dimval,
-			socket: socket,
+			socket: socket
 		};
 	}
 	else {
+		if (!devicetype) {
+			devicetype = currentdevice[devicetype];
+		}
+		flashstatus = currentdevice[flashstatus];
+		dimval = currentdevice[dimval];
 		updateDevice({
 			deviceid: deviceid,
 			devicetype: devicetype,
-			devicestatus: devicestatus,	
+			devicestatus: devicestatus
 		});
-		currentdevice[devicetype] = devicetype;
-		currentdevice[devicestatus] = devicestatus;
+		devices[deviceid] = {
+			deviceid: deviceid,
+			devicetype: devicetype,
+			devicestatus: devicestatus,
+			flashstatus: flashstatus,
+			dimval: dimval,
+			socket: socket
+		};
 		clog("Updated: " + deviceid);
 	}
 
