@@ -4,5 +4,5 @@
  */
 
 exports.index = function(req, res){
-  res.render('index', { title: 'SWITCH' , devices: devices})
+  res.render('index', { title: 'SWITCH' , devices: req.devices })
 };

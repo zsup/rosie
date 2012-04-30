@@ -44,7 +44,6 @@ $(document).ready(function() {
 		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
 		var deviceid = statusobj["deviceid"];
 		var dimval = statusobj["dimval"];
-		$('.dimvalp[deviceid="'+deviceid+'"]').text(dimval);
 		$('.dimslider[deviceid="'+deviceid+'"]').slider("value", dimval)
 		$('.deviconbg[deviceid="'+deviceid+'"]').css("opacity", dimval/255)
 	});

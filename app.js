@@ -1,3 +1,7 @@
+/* 
+ * THIS VERSION HAS BEEN DEPRACATED.
+ * PLEASE USE APP.COFFEE INSTEAD.
+ */
 
 /**
  * Basic requirements and initialization
