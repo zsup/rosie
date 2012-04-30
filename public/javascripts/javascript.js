@@ -13,7 +13,7 @@ $(document).ready(function() {
 			slide: function( event, ui ) {
 				var deviceid = $(this).attr("deviceid")
 				$('.dimvalp[deviceid="'+deviceid+'"]').text(ui.value);
-				$.ajax('/device/' + deviceid + '/dim'+ui.value);
+				$.ajax('/device/' + deviceid + '/dim/'+ui.value);
 			}
 	}
 
@@ -185,5 +185,5 @@ function bindSendDim(e) {
 	e.preventDefault();
 	deviceid = $(this).attr('deviceid');
 	dimval = $(this).attr('dimval');
-	$.ajax('/device/' + deviceid + '/dim'+dimval);		
+	$.ajax('/device/' + deviceid + '/dim/' + dimval);		
 };

@@ -77,10 +77,14 @@ app.get '/', loadDevices, (req, res) ->
 		devices: devices
 
 # Routing for http requests (API)
-app.get '/device/:deviceid/:dothis', (req, res) ->
+app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
 	deviceid = req.params.deviceid
 	dothis = req.params.dothis
-	clog "HTTP request received for device #{deviceid} to #{dothis}"
+	if req.params.param?
+		param = req.params.param
+		clog "HTTP request received for device #{deviceid} to #{dothis} to #{param}"
+	else
+		clog "HTTP request received for device #{deviceid} to #{dothis}"
 	
 	# If the device is connected, send it a message
 	device = devices[deviceid]
@@ -131,22 +135,21 @@ app.get '/device/:deviceid/:dothis', (req, res) ->
 				delete device.flashID
 				device.flashstatus = "NotFlashing"
 				updateFlashStatus device
+			when "dim"
+				if not param?
+					clog "Must send parameters to dim"
+					break
+				dimval = parseInt param
+				if 0 <= dimval <= 256
+					if dimval is 0 then dimval = 1
+					if dimval is 256 then dimval = 255
+					clog "sending dim #{dimval} to #{deviceid}"
+					device.socket.write "#{deviceid},dim#{dimval}\n"
+					device.dimval = dimval
+					updateDimStatus device
+				else clog "Bad dim val: #{param}"
 			else
-				if dothis.indexOf "dim" is 0
-					# dimming
-					dothis = dothis.slice 3
-					dimval = parseInt dothis
-					if 0 <= dimval <= 256
-						if dimval is 0 then dimval = 1
-						if dimval is 256 then dimval = 255
-						clog "sending dim #{dimval} to #{deviceid}"
-						device.socket.write "#{deviceid},dim#{dimval}\n"
-						device.dimval = dimval
-						updateDimStatus device
-					else
-						clog "Bad dim val: #{dimval}"
-				else
-					clog "#{dothis} is not a valid function."
+				clog "#{dothis} is not a valid function."
 		res.send "Message sent."
 	else res.send "No device connected with ID #{deviceid}"
 
