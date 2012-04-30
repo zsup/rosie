@@ -8,9 +8,7 @@
 net = require 'net'
 http = require 'http'
 
-# Store a couple of JavaScript object helpers
-sockets = {}
-intervals = {}
+# A JavaScript object helper to store devices
 devices = {}
 
 # Helpers for processing TCP stream.
@@ -67,8 +65,6 @@ loadDevices = (req, res, next) ->
 	if devices?
 		req.devices = devices
 		next()
-	else
-		next(new Error('No devices yet'))
 
 # Load the core site
 app.get '/', loadDevices, (req, res) ->
@@ -76,7 +72,20 @@ app.get '/', loadDevices, (req, res) ->
 		title: "SWITCH"
 		devices: devices
 
-# Routing for http requests (API)
+# Routing for 'get status' HTTP requests
+app.get '/device/:deviceid', (req, res) ->
+	device = devices[req.params.deviceid]
+	if device?
+		clog "Sending status of #{device.deviceid} to client"
+		res.json
+			deviceid: device.deviceid
+			devicetype: device.devicetype
+			devicestatus: device.devicestatus
+	else
+		clog "Request for status of #{req.params.deviceid} received; device not found"
+		res.send "No device at that address", 404
+
+# Routing for 'command' http requests (API)
 app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
 	deviceid = req.params.deviceid
 	dothis = req.params.dothis
@@ -228,16 +237,13 @@ server = net.createServer (socket) ->
 	socket.setEncoding 'ascii'
 	socket.setKeepAlive true
 
-	socket.devices = [];
-
-	# TODO: Rewrite this so it searches for all devices with the socket 'socket' and deletes them.
-	# Then, get rid of all of the references to socket.devices[].
+	# TODO: This is not working. Fix it.
 	socket.on 'close', ->
-		device = socket.devices.pop()
-		
-		if device?
-			deleteDevice(device);
-			device = socket.devices.pop()
+		for id in devices
+			device = devices[id]
+			if device.socket is socket
+				deleteDevice device
+				clog "Device #{device.deviceid} disconnected"
 		clog 'TCP client disconnected'
 	
 	# Receive and parse incoming data
@@ -299,7 +305,6 @@ process = (message, socket) ->
 			dimval: dimval
 		clog "Added: #{deviceid}"
 		# TODO: This will cause an error if the same device connects through multiple sockets. Fix it.
-		socket.devices.push deviceid
 		devices[deviceid] =
 			deviceid: deviceid
 			devicetype: devicetype
