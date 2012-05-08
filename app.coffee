@@ -17,6 +17,7 @@ separator = "\n"
 
 # Some helper functions.
 ts = ->
+	# TODO: CoffeeScript-ize this
 	d = new Date().toTimeString()
 	index = d.indexOf " GMT"
 	d = d.slice(0,index)
@@ -48,7 +49,11 @@ class Device
 	
 	flash: ->
 		if @flashstatus is "Flashing"
-			clog "Not sending flash command - already flashing"
+			clog "Deactivating flash for #{@deviceid}"
+			clearInterval @flashID
+			delete @flashID
+			@flashstatus = "NotFlashing"
+			updateFlashStatus this
 		else
 			clog "Activating flash for #{@deviceid}"
 			# first toggle once
@@ -59,13 +64,6 @@ class Device
 			@flashID = setInterval flashToggle, 750, this
 			@flashstatus = "Flashing"
 			updateFlashStatus this
-			
-	stopflash: ->
-		clog "Deactivating flash for #{@deviceid}"
-		clearInterval @flashID
-		delete @flashID
-		@flashstatus = "NotFlashing"
-		updateFlashStatus this
 	
 	# TODO: Should be put in a separate "dimmable device" class that extends Device
 	dim: (value) ->
@@ -157,8 +155,10 @@ app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
 	if device? and dothis?
 		try
 			# TODO: Make this more secure
+			# device["#{dothis}()"]
 			eval "device.#{dothis}(#{param})"
 			res.send "Message sent to #{deviceid}."
+			clog "Processing message."
 		catch err
 			res.send "Not a valid request."
 			clog "Not a valid request."
@@ -299,9 +299,10 @@ process = (message, socket) ->
 
 io.sockets.on 'connection', (iosocket) ->
 	clog "Got new socket"
-	for id in devices
+	# TODO: Now that this is working, take this out from the page template
+	for id, device of devices
 		device = devices[id]
-		clog "Emitting to #{device.deviceid}"
+		clog "Emitting about #{device.deviceid}"
 		iosocket.emit 'statuschange',
 			deviceid: device.deviceid
 			devicestatus: device.devicestatus

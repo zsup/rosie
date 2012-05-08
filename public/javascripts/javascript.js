@@ -2,7 +2,6 @@ $(document).ready(function() {
 
 	$('a.togbutton').click(bindToggle);
 	$('a.flashbutton').click(bindFlash);
-	$('a.stopflashbutton').click(bindStopFlash);
 	$('a.dimbutton').click(bindSendDim);
 
 	var slideparam = {
@@ -51,21 +50,13 @@ $(document).ready(function() {
 	socket.on('flashstatuschange', function (statusobj) {
 		deviceid = statusobj["deviceid"];
 		flashstatus = statusobj["flashstatus"];
-		if (flashstatus == "Flashing") {
+		if (flashstatus === "Flashing") {
 			fbutton = $('a.fbutton[deviceid=\"'+deviceid+'\"]')
-			fbutton.removeClass('flashbutton');
-			fbutton.addClass('stopflashbutton');
 			fbutton.addClass('active');
-			fbutton.unbind('click');
-			fbutton.click(bindStopFlash);
 		}
 		else {
-			fbutton = $('a.fbutton[deviceid="'+deviceid+'"]')
-			fbutton.removeClass('stopflashbutton');
-			fbutton.addClass('flashbutton');
+			fbutton = $('a.fbutton[deviceid=\"'+deviceid+'\"]')
 			fbutton.removeClass('active');
-			fbutton.unbind('click');
-			fbutton.click(bindFlash);
 		};
 	});
 
@@ -92,25 +83,13 @@ $(document).ready(function() {
     	
 		var fbutton = newrow.find('a.fbutton')
     	fbutton.attr('deviceid', deviceobj.deviceid);
-    	if (deviceobj.flashstatus == "Flashing") {
-			if (newrow.hasClass('flashbutton')) {
-				fbutton.removeClass('flashbutton');
-				fbutton.addclass('stopflashbutton');
-				fbutton.addClass('active');
-			}
-			fbutton.click(bindStopFlash);
+    	if (deviceobj.flashstatus === "Flashing") {
+			fbutton.addClass('active');
 		}
-		else {
-			if (newrow.hasClass('stopflashbutton')) {
-				fbutton.removeClass('stopflashbutton');
-				fbutton.addClass('flashbutton');
-				fbutton.removeClass('active');
-			}
-			fbutton.click(bindFlash);
-		};
+		fbutton.click(bindFlash);
 
 		var dimslider = newrow.find('.dimslider');
-		if (deviceobj.devicetype == "LED") {
+		if (deviceobj.devicetype === "LED") {
 			dimslider.attr('deviceid', deviceobj.deviceid);
 			dimslider.attr('initval', deviceobj.dimval);
 			dimslider.slider(slideparam);
@@ -173,12 +152,6 @@ function bindFlash(e) {
 	e.preventDefault();
 	deviceid = $(this).attr('deviceid');
 	$.ajax('/device/' + deviceid + '/flash');		
-};
-
-function bindStopFlash(e) {
-	e.preventDefault();
-	deviceid = $(this).attr('deviceid');
-	$.ajax('/device/' + deviceid + '/stopflash');		
 };
 
 function bindSendDim(e) {
