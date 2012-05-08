@@ -15,6 +15,70 @@ devices = {}
 buffer = ""
 separator = "\n"
 
+# Some helper functions.
+ts = ->
+	d = new Date().toTimeString()
+	index = d.indexOf " GMT"
+	d = d.slice(0,index)
+
+clog = (msg) ->
+	console.log "#{ts()}: #{msg}"
+
+# Let's define our core object: the Device.
+class Device
+	constructor: (@deviceid, @devicetype, @socket, @devicestatus = "Off", @flashstatus = "NotFlashing", @dimval = 255) ->
+	
+	turnOn: ->
+		clog "Telling #{@deviceid} to turn on"
+		@devicestatus = "On"
+		@socket.write "#{@deviceid},turnOn\n"
+		updateStatus this
+	
+	turnOff: ->
+		clog "Telling #{@deviceid} to turn off"
+		@devicestatus = "Off"
+		@socket.write "#{@deviceid},turnOff\n"
+		updateStatus this
+	
+	toggle: ->
+		if @devicestatus is "On"
+			@turnOff()
+		else
+			@turnOn()
+	
+	flash: ->
+		if @flashstatus is "Flashing"
+			clog "Not sending flash command - already flashing"
+		else
+			clog "Activating flash for #{@deviceid}"
+			# first toggle once
+			@toggle()
+		
+			# then set flash timer
+			# TODO: Make this call the toggle() function instead of the external flashToggle function
+			@flashID = setInterval flashToggle, 750, this
+			@flashstatus = "Flashing"
+			updateFlashStatus this
+			
+	stopflash: ->
+		clog "Deactivating flash for #{@deviceid}"
+		clearInterval @flashID
+		delete @flashID
+		@flashstatus = "NotFlashing"
+		updateFlashStatus this
+	
+	# TODO: Should be put in a separate "dimmable device" class that extends Device
+	dim: (value) ->
+		value = parseInt value
+		if 0 <= value <= 256
+			if value is 0 then value = 1
+			if value is 256 then value = 255
+			clog "sending dim #{value} to #{@deviceid}"
+			@socket.write "#{@deviceid},dim#{value}\n"
+			@dimval = value
+			updateDimStatus this
+		else clog "Bad dim val: #{value}"
+		
 
 ###
 	Express Web Server.
@@ -48,14 +112,6 @@ app.configure 'development', ->
 
 app.configure 'production', ->
 	@use express.errorHandler()
-
-ts = ->
-	d = new Date().toTimeString()
-	index = d.indexOf " GMT"
-	d = d.slice(0,index)
-
-clog = (msg) ->
-	console.log "#{ts()}: #{msg}"
 	
 ###
 	Routing for the web-app
@@ -97,82 +153,27 @@ app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
 	
 	# If the device is connected, send it a message
 	device = devices[deviceid]
-	if device?
-		switch dothis
-			when "turnOn"
-				clog "sending turnOn to #{deviceid}"
-				device.socket.write "#{deviceid},turnOn\n"
-				updateStatus device
-			when "turnOff"
-				clog "sending turnOff to #{deviceid}"
-				device.socket.write "#{deviceid},turnOff\n"
-				updateStatus device
-			when "toggle"
-				if device.devicestatus is "On"
-					clog "sending turnOff to #{deviceid}"
-					device.socket.write "#{deviceid},turnOff\n"
-					device.devicestatus = "Off"
-				else
-					clog "sending turnOn to #{deviceid}"
-					device.socket.write "#{deviceid},turnOn\n"
-					device.devicestatus = "On"
-				updateStatus device
-			when "flash"
-				if device.flashstatus is "Flashing"
-					clog "Not sending flash command - already flashing"
-					break
-				else
-					# first toggle once
-					if device.devicestatus is "On"
-						clog "sending turnOff to #{deviceid}"
-						device.socket.write "#{deviceid},turnOff\n"
-						device.devicestatus = "Off"
-					else
-						clog "sending turnOn to #{deviceid}"
-						device.socket.write "#{deviceid},turnOn\n"
-						device.devicestatus = "On"
-					updateStatus device
-				
-					# then set flash timer
-					intervalID = setInterval flashToggle, 750, device
-					device.flashstatus = "Flashing"
-					device.flashID = intervalID
-					updateFlashStatus device
-					break
-			when "stopflash"
-				clearInterval device.flashID
-				delete device.flashID
-				device.flashstatus = "NotFlashing"
-				updateFlashStatus device
-			when "dim"
-				if not param?
-					clog "Must send parameters to dim"
-					break
-				dimval = parseInt param
-				if 0 <= dimval <= 256
-					if dimval is 0 then dimval = 1
-					if dimval is 256 then dimval = 255
-					clog "sending dim #{dimval} to #{deviceid}"
-					device.socket.write "#{deviceid},dim#{dimval}\n"
-					device.dimval = dimval
-					updateDimStatus device
-				else clog "Bad dim val: #{param}"
-			else
-				clog "#{dothis} is not a valid function."
-		res.send "Message sent."
+	if device? and dothis?
+		if param?
+			try
+				# TODO: Make this more secure
+				eval "device.#{dothis}(#{param})"
+			catch err
+				clog "Not a valid request."
+		else
+			
+			try
+				# TODO: Make this more secure
+				eval "device.#{dothis}()"
+				res.send "Message sent to #{deviceid}."
+			catch err
+				clog "Not a valid request."
+				res.send "Not a valid request."
 	else res.send "No device connected with ID #{deviceid}"
 
 flashToggle = (device) ->
-	if device.devicestatus is "On"
-		clog "Sending turnOff to #{device.deviceid} (due to flashing)"
-		device.socket.write "#{device.deviceid},turnOff\n"
-		device.devicestatus = "Off"
-	else
-		clog "Sending turnOn to #{device.deviceid} (due to flashing)"
-		device.socket.write "#{device.deviceid},turnOn\n"
-		device.devicestatus = "On"
-	updateStatus device
-
+	device.toggle()
+	clog "(Due to flashing)"
 
 updateFlashStatus = (device) ->
 	io.sockets.emit 'flashstatuschange',
@@ -204,7 +205,6 @@ updateDevice = (device) ->
 		devicestatus: device.devicestatus
 		flashstatus: device.flashstatus
 		dimval: device.dimval
-		socket: device.socket
 
 removeDevice = (device) ->
 	io.sockets.emit 'removedevice',
@@ -239,8 +239,8 @@ server = net.createServer (socket) ->
 
 	# TODO: This is not working. Fix it.
 	socket.on 'close', ->
-		for id in devices
-			device = devices[id]
+		for device in devices
+			clog "Checking device #{device.deviceid}"
 			if device.socket is socket
 				deleteDevice device
 				clog "Device #{device.deviceid} disconnected"
@@ -294,40 +294,19 @@ process = (message, socket) ->
 	
 	currentdevice = devices[deviceid]
 	
-	if not currentdevice
-		flashstatus = "NotFlashing"
-		dimval = 255
-		addDevice
-			deviceid: deviceid
-			devicetype: devicetype
-			devicestatus: devicestatus
-			flashstatus: flashstatus
-			dimval: dimval
-		clog "Added: #{deviceid}"
+	if not currentdevice?
 		# TODO: This will cause an error if the same device connects through multiple sockets. Fix it.
-		devices[deviceid] =
-			deviceid: deviceid
-			devicetype: devicetype
-			devicestatus: devicestatus
-			flashstatus: flashstatus
-			dimval: dimval
-			socket: socket
+		devices[deviceid] = new Device(deviceid, devicetype, socket, devicestatus)
+		addDevice devices[deviceid]
+		clog "Added: #{deviceid}"
 	else
-		if not devicetype
-			devicetype = currentdevice[devicetype]
-		flashstatus = currentdevice[flashstatus]
-		dimval = currentdevice[dimval]
+		if devicetype? then currentdevice.devicetype = devicetype
+		if devicestatus? then currentdevice.devicestatus = devicestatus
+		if socket isnt currentdevice.socket then currentdevice.socket = socket
 		updateDevice
 			deviceid: deviceid
 			devicetype: devicetype
 			devicestatus: devicestatus
-		devices[deviceid] = 
-			deviceid: deviceid
-			devicetype: devicetype
-			devicestatus: devicestatus
-			flashstatus: flashstatus
-			dimval: dimval
-			socket: socket
 		clog "Updated: #{deviceid}"
 
 io.sockets.on 'connection', (iosocket) ->
