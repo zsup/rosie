@@ -154,16 +154,14 @@ app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
 	device = devices[deviceid]
 	if device? and dothis?
 		try
-			# TODO: Make this more secure
-			# device["#{dothis}()"]
-			eval "device.#{dothis}(#{param})"
+			device[dothis](param)
 			res.send "Message sent to #{deviceid}."
-			clog "Processing message."
 		catch err
 			res.send "Not a valid request."
 			clog "Not a valid request."
 	else res.send "No device connected with ID #{deviceid}"
 
+# TODO: Refactor the following set of functions into one "emit" function
 flashToggle = (device) ->
 	device.toggle()
 	clog "(Due to flashing)"
