@@ -149,26 +149,19 @@ app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
 		param = req.params.param
 		clog "HTTP request received for device #{deviceid} to #{dothis} to #{param}"
 	else
+		param = ""
 		clog "HTTP request received for device #{deviceid} to #{dothis}"
 	
 	# If the device is connected, send it a message
 	device = devices[deviceid]
 	if device? and dothis?
-		if param?
-			try
-				# TODO: Make this more secure
-				eval "device.#{dothis}(#{param})"
-			catch err
-				clog "Not a valid request."
-		else
-			
-			try
-				# TODO: Make this more secure
-				eval "device.#{dothis}()"
-				res.send "Message sent to #{deviceid}."
-			catch err
-				clog "Not a valid request."
-				res.send "Not a valid request."
+		try
+			# TODO: Make this more secure
+			eval "device.#{dothis}(#{param})"
+			res.send "Message sent to #{deviceid}."
+		catch err
+			res.send "Not a valid request."
+			clog "Not a valid request."
 	else res.send "No device connected with ID #{deviceid}"
 
 flashToggle = (device) ->
@@ -210,11 +203,6 @@ removeDevice = (device) ->
 	io.sockets.emit 'removedevice',
 		deviceid: device.deviceid
 
-deleteDevice = (device) ->
-	clog "Deleting #{device}"
-	removeDevice devices[device]
-	delete devices[device]
-
 
 # Routing for a few redirects
 app.get '/demo', (req, res) ->
@@ -237,19 +225,19 @@ server = net.createServer (socket) ->
 	socket.setEncoding 'ascii'
 	socket.setKeepAlive true
 
-	# TODO: This is not working. Fix it.
 	socket.on 'close', ->
-		for device in devices
-			clog "Checking device #{device.deviceid}"
+		for id, device of devices
 			if device.socket is socket
-				deleteDevice device
-				clog "Device #{device.deviceid} disconnected"
+				removeDevice device
+				delete devices[id]
+				clog "Device #{id} disconnected"
 		clog 'TCP client disconnected'
 	
 	# Receive and parse incoming data
 	socket.on 'data', (chunk) ->
 		buffer += chunk
 		clog "Message received: #{chunk}" 
+		# TODO: CoffeeScript-ize this section
 		separatorIndex = buffer.indexOf separator
 		foundMessage = separatorIndex != -1
 		
