@@ -45,7 +45,9 @@ a.switchy:active {
 
 .iconbox {
 	height:68px;
+	width: 54px;
 	position: relative;
+	margin: 0 auto;
 }
 
 .deviconbg {
@@ -119,7 +121,7 @@ a.switchy:active {
 	display: none;
 }
 
-.devtitle, .devtype {
+/*.devtitle, .devtype {
 	color: white;
 	font-family: Futura, "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-weight: bold;
@@ -128,7 +130,7 @@ a.switchy:active {
 	margin-top: 22px;
 	text-transform: uppercase;
 	text-shadow: 3px 3px 2px black;
-}
+}*/
 
 .btn {
 	margin-top: 15px;
@@ -141,4 +143,15 @@ a.switchy:active {
 .row {
 	position: relative;
 	margin-bottom: 20px;
+}
+
+.dial {
+	box-shadow: none;
+	background: none;
+	height: 44px;
+}
+
+.switchbtns {
+	padding: 0 35px;
+	margin-bottom: 10px;
 }

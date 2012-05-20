@@ -16,32 +16,31 @@ div.navbar.navbar-fixed-top
 						a(href="#") Contact
 
 div.container
-	each device in devices
-		div.row(deviceid=device.deviceid)
-			div.span2.devtitle= device.deviceid
-			div.span1.devtype= device.devicetype
-			div.span1.iconbox
-				img.deviconbg(devicestatus=device.devicestatus, deviceid=device.deviceid, src="/images/bulbglow54.png", style="opacity:"+device.dimval/255)
-				img.devicon(src="/images/bulb54.png")
-			div.span3
-				div.btn-group
+	div.row
+		each device in devices
+			div.span3.well(deviceid=device.deviceid)
+				h3.devtitle.pull-right= device.devicetype
+				h3.devtitle= device.deviceid
+				div.iconbox
+					img.deviconbg(devicestatus=device.devicestatus, deviceid=device.deviceid, src="/images/bulbglow54.png", style="opacity:"+device.dimval/255)
+					img.devicon(src="/images/bulb54.png")
+				div.btn-group.switchbtns
 					a.btn.btn-large.btn-primary.togbutton(deviceid=device.deviceid, href="#") Toggle
 					if device.flashstatus != "Flashing"
 						a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid=device.deviceid, href="#") Flash
 					else
 						a.btn.btn-large.btn-primary.active.fbutton.stopflashbutton(deviceid=device.deviceid, href="#") Flash
-			div.span5
 				if device.devicetype == "LED"
-					div.dimslider(deviceid=device.deviceid, initval=device.dimval)
-	div.row.clone(deviceid="")
-		div.span2.devtitle &nbsp;
-		div.span1.devtype &nbsp;
-		div.span1.iconbox
-			img.deviconbg(src="/images/bulbglow54.png", deviceid="")
-			img.devicon(src="/images/bulb54.png")
-		div.span3
-			div.btn-group
-				a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
-				a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
-		div.span5
-			div.dimslider(deviceid="", initval="")
+					input.dial(type="text", data-min="0", data-max="255", data-width="220", deviceid = device.deviceid, value=device.dimval)
+		div.row.clone(deviceid="")
+			div.span2.devtitle &nbsp;
+			div.span1.devtype &nbsp;
+			div.span1.iconbox
+				img.deviconbg(src="/images/bulbglow54.png", deviceid="")
+				img.devicon(src="/images/bulb54.png")
+			div.span3
+				div.btn-group
+					a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
+					a.btn.btn-large.btn-primary.fbutton.flashbutton(deviceid="", href="#") Flash
+			div.span5
+				div.dimslider(deviceid="", initval="")

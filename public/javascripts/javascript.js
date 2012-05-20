@@ -3,26 +3,21 @@ $(document).ready(function() {
 	$('a.togbutton').click(bindToggle);
 	$('a.flashbutton').click(bindFlash);
 	$('a.dimbutton').click(bindSendDim);
-
-	var slideparam = {
-			value:255,
-			min: 0,
-			max: 256,
-			step: 4,
-			slide: function( event, ui ) {
-				var deviceid = $(this).attr("deviceid")
-				$('.dimvalp[deviceid="'+deviceid+'"]').text(ui.value);
-				$.ajax('/device/' + deviceid + '/dim/'+ui.value);
-			}
-	}
-
-	$('.dimslider').slider(slideparam);
-	$('.dimslider').each( function() {
+	$('.dial').knob({
+		'change': function (e) {
+			var deviceid = $(this).attr("deviceid");
+			$.ajax('/device/' + deviceid + '/dim/' + e.value);
+		}
+	});
+	
+	/* Need to figure out how to get initial values for each one
+	$('.dial').each( function() {
 		var initval = $(this).attr("initval");
 		if (initval) {
 			$(this).slider("value", initval);
 		}
 	});
+	*/
 
 	var socket = io.connect('/', {
 		reconnect: false
