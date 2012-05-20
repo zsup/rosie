@@ -32,13 +32,13 @@ class Device
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
 		@devicestatus = "On"
-		@socket.write "#{@deviceid},turnOn\n"
+		@message()
 		updateStatus this
 	
 	turnOff: ->
 		clog "Telling #{@deviceid} to turn off"
 		@devicestatus = "Off"
-		@socket.write "#{@deviceid},turnOff\n"
+		@message()
 		updateStatus this
 	
 	toggle: ->
@@ -72,10 +72,19 @@ class Device
 			if value is 0 then value = 1
 			if value is 256 then value = 255
 			clog "sending dim #{value} to #{@deviceid}"
-			@socket.write "#{@deviceid},dim#{value}\n"
+			@message()
 			@dimval = value
 			updateDimStatus this
 		else clog "Bad dim val: #{value}"
+	
+	# Send the updated device to the device via JSON.
+	message: ->
+		# TODO: Expect a response, and add error-catching
+		@socket.write JSON.stringify
+			deviceid: @deviceid
+			devicestatus: @devicestatus
+			dimval: @dimval
+		@socket.write "\n"
 		
 
 ###
