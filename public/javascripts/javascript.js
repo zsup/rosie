@@ -3,21 +3,14 @@ $(document).ready(function() {
 	$('a.togbutton').click(bindToggle);
 	$('a.flashbutton').click(bindFlash);
 	$('a.dimbutton').click(bindSendDim);
-	$('.dial').knob({
-		'change': function (e) {
-			var deviceid = $(this).attr("deviceid");
-			$.ajax('/device/' + deviceid + '/dim/' + e.value);
-		}
-	});
 	
-	/* Need to figure out how to get initial values for each one
-	$('.dial').each( function() {
-		var initval = $(this).attr("initval");
-		if (initval) {
-			$(this).slider("value", initval);
+	// Knobby function. Makes a pretty sweet knob.
+	$('.dial').knob({
+		'release': function (value, ipt) {
+			var deviceid = ipt.attr("deviceid");
+			$.ajax('/device/' + deviceid + '/dim/' + value);
 		}
 	});
-	*/
 
 	var socket = io.connect('/', {
 		reconnect: false
@@ -38,6 +31,8 @@ $(document).ready(function() {
 		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
 		var deviceid = statusobj["deviceid"];
 		var dimval = statusobj["dimval"];
+		
+		// TODO: Fix this for the knob
 		$('.dimslider[deviceid="'+deviceid+'"]').slider("value", dimval)
 		$('.deviconbg[deviceid="'+deviceid+'"]').css("opacity", dimval/255)
 	});
@@ -68,10 +63,6 @@ $(document).ready(function() {
 		var devtype = newrow.find('.devtype');
 		devtype.text(deviceobj.devicetype);
     	
-    	var deviconbg = newrow.find('.deviconbg')
-    	deviconbg.attr('deviceid', deviceobj.deviceid);
-    	deviconbg.attr('devicestatus', deviceobj.devicestatus);
-    	
     	var togbutton = newrow.find('a.togbutton')
     	togbutton.attr('deviceid', deviceobj.deviceid)
     	togbutton.click(bindToggle)
@@ -83,14 +74,13 @@ $(document).ready(function() {
 		}
 		fbutton.click(bindFlash);
 
-		var dimslider = newrow.find('.dimslider');
-		if (deviceobj.devicetype === "LED") {
-			dimslider.attr('deviceid', deviceobj.deviceid);
-			dimslider.attr('initval', deviceobj.dimval);
-			dimslider.slider(slideparam);
+		var dial = newrow.find('.dial');
+		if (deviceobj.devicetype === "LED" || deviceobj.devicetype === "Dimmable Lamp") {
+			dial.attr('deviceid', deviceobj.deviceid);
+			dial.attr('value', deviceobj.dimval);
 		}
 		else {
-			dimslider.remove();
+			dial.remove();
 		}
 		
 		newrow.css({
@@ -120,7 +110,7 @@ $(document).ready(function() {
 
 	socket.on('removedevice', function (deviceobj) {
 		deviceid = deviceobj.deviceid;
-		var oldrow = $(".row[deviceid=\"" + deviceid + "\"]");
+		var oldrow = $(".panel[deviceid=\"" + deviceid + "\"]");
 		oldrow.animate({
 			'opacity' : 0,
 			'top' : '-20px',

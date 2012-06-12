@@ -1,4 +1,3 @@
-
 ###
 	Basic requirements and initialization
 ###
@@ -27,32 +26,32 @@ clog = (msg) ->
 
 # Let's define our core object: the Device.
 class Device
-	constructor: (@deviceid, @devicetype, @socket, @devicestatus = "Off", @flashstatus = "NotFlashing", @dimval = 255) ->
+	constructor: (@deviceid, @devicetype, @socket, @devicestatus = 1, @flashstatus = 0, @dimval = 255) ->
 	
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
-		@devicestatus = "On"
+		@devicestatus = 1
 		@message()
 		updateStatus this
 	
 	turnOff: ->
 		clog "Telling #{@deviceid} to turn off"
-		@devicestatus = "Off"
+		@devicestatus = 0
 		@message()
 		updateStatus this
 	
 	toggle: ->
-		if @devicestatus is "On"
+		if @devicestatus is 1
 			@turnOff()
 		else
 			@turnOn()
 	
 	flash: ->
-		if @flashstatus is "Flashing"
+		if @flashstatus is 1
 			clog "Deactivating flash for #{@deviceid}"
 			clearInterval @flashID
 			delete @flashID
-			@flashstatus = "NotFlashing"
+			@flashstatus = 0
 			updateFlashStatus this
 		else
 			clog "Activating flash for #{@deviceid}"
@@ -62,7 +61,7 @@ class Device
 			# then set flash timer
 			# TODO: Make this call the toggle() function instead of the external flashToggle function
 			@flashID = setInterval flashToggle, 750, this
-			@flashstatus = "Flashing"
+			@flashstatus = 1
 			updateFlashStatus this
 	
 	# TODO: Should be put in a separate "dimmable device" class that extends Device
@@ -71,20 +70,21 @@ class Device
 		if 0 <= value <= 256
 			if value is 0 then value = 1
 			if value is 256 then value = 255
-			clog "sending dim #{value} to #{@deviceid}"
-			@message()
+			clog "Sending dim #{value} to #{@deviceid}"
 			@dimval = value
+			@message()
 			updateDimStatus this
-		else clog "Bad dim val: #{value}"
+		else clog "Bad dim value: #{value}"
 	
-	# Send the updated device to the device via JSON.
+	# Send the updated device info downstream to the router via JSON.
 	message: ->
 		# TODO: Expect a response, and add error-catching
 		@socket.write JSON.stringify
 			deviceid: @deviceid
+			devicetype: @devicetype
 			devicestatus: @devicestatus
 			dimval: @dimval
-		@socket.write "\n"
+		@socket.write separator
 		
 
 ###
@@ -149,21 +149,21 @@ app.get '/device/:deviceid', (req, res) ->
 		res.send "No device at that address", 404
 
 # Routing for 'command' http requests (API)
-app.get '/device/:deviceid/:dothis/:param?', (req, res) ->
+app.get '/device/:deviceid/:action/:param?', (req, res) ->
 	deviceid = req.params.deviceid
-	dothis = req.params.dothis
+	action = req.params.action
 	if req.params.param?
 		param = req.params.param
-		clog "HTTP request received for device #{deviceid} to #{dothis} to #{param}"
+		clog "HTTP request received for device #{deviceid} to #{action} to #{param}"
 	else
 		param = ""
-		clog "HTTP request received for device #{deviceid} to #{dothis}"
+		clog "HTTP request received for device #{deviceid} to #{action}"
 	
 	# If the device is connected, send it a message
 	device = devices[deviceid]
-	if device? and dothis?
+	if device? and action?
 		try
-			device[dothis](param)
+			device[action](param)
 			res.send "Message sent to #{deviceid}."
 		catch err
 			res.send "Not a valid request."
@@ -280,11 +280,7 @@ process = (message, socket) ->
 
 	# well formed input - add device to list of devices
 	deviceid = msgobj.deviceid
-	if msgobj.devicestatus is 1
-		devicestatus = "On"
-	else
-		devicestatus = "Off"
-	
+	devicestatus = msgobj.devicestatus
 	devicetype = msgobj.devicetype
 	
 	currentdevice = devices[deviceid]
