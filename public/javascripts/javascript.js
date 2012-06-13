@@ -116,7 +116,7 @@ $(document).ready(function() {
 	});
 
 	socket.on('removedevice', function (deviceobj) {
-		deviceid = deviceobj.deviceid;
+		var deviceid = deviceobj.deviceid;
 		var oldrow = $(".panel[deviceid=\"" + deviceid + "\"]");
 		oldrow.animate({
 			'opacity' : 0,
