@@ -136,15 +136,6 @@ a.switchy:active {
 	margin-top: 15px;
 }
 
-.dimslider {
-	margin-top: 28px;
-}
-
-.row {
-	position: relative;
-	margin-bottom: 20px;
-}
-
 .dial {
 	box-shadow: none;
 	background: none;
@@ -157,18 +148,19 @@ a.switchy:active {
 }
 
 .panel {
-  min-height: 20px;
-  padding: 19px;
-  margin-bottom: 20px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border: 1px solid #eee;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  border-radius: 4px;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+	position: relative;
+	min-height: 20px;
+	padding: 19px;
+	margin-bottom: 20px;
+	background-color: rgba(255, 255, 255, 0.15);
+	border: 1px solid #eee;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .panel h3 {
@@ -180,24 +172,18 @@ a.switchy:active {
 
 }
 
-/* Media queries for responsive jQuery knob. */
+/* Put the jQuery knob in the middle of the panel. */
 
-/* Landscape phones and down */
-@media (max-width: 480px) {
-	
+.dial-div {
+	width: 166px;
+	margin: 0 auto;
 }
- 
+
 /* Landscape phone to portrait tablet */
 @media (max-width: 767px) {
-
-}
- 
-/* Portrait tablet to landscape and desktop */
-@media (min-width: 768px) and (max-width: 979px) {
-
-}
- 
-/* Large desktop */
-@media (min-width: 1200px) {
-
+	.panel {
+		float: none;
+		margin-left: auto;
+		margin-right: auto;
+	}
 }

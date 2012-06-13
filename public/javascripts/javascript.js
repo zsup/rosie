@@ -4,13 +4,20 @@ $(document).ready(function() {
 	$('a.flashbutton').click(bindFlash);
 	$('a.dimbutton').click(bindSendDim);
 	
-	// Knobby function. Makes a pretty sweet knob.
-	$('.dial').knob({
+	var knobvars = {
+		'min': 0 ,
+		'max': 255 ,
+		'width': 166 ,
+		'fgColor' : "yellow" ,
+		'displayPrevious' : true ,
 		'release': function (value, ipt) {
 			var deviceid = ipt.attr("deviceid");
 			$.ajax('/device/' + deviceid + '/dim/' + value);
 		}
-	});
+	};
+	
+	// Knobby function. Makes a pretty sweet knob.
+	$('.dial').knob(knobvars);
 
 	var socket = io.connect('/', {
 		reconnect: false
@@ -33,14 +40,13 @@ $(document).ready(function() {
 		var dimval = statusobj["dimval"];
 		
 		// TODO: Fix this for the knob
-		$('.dimslider[deviceid="'+deviceid+'"]').slider("value", dimval)
-		$('.deviconbg[deviceid="'+deviceid+'"]').css("opacity", dimval/255)
+		$('.dial[deviceid="'+deviceid+'"]').val(dimval).trigger('configure')
 	});
 
 	socket.on('flashstatuschange', function (statusobj) {
 		deviceid = statusobj["deviceid"];
 		flashstatus = statusobj["flashstatus"];
-		if (flashstatus === "Flashing") {
+		if (flashstatus == 1) {
 			fbutton = $('a.fbutton[deviceid=\"'+deviceid+'\"]')
 			fbutton.addClass('active');
 		}
@@ -52,43 +58,47 @@ $(document).ready(function() {
 
 	socket.on('adddevice', function (deviceobj) {
 		var cloner = $('.clone');
-    	var newrow = cloner.clone();
-		newrow.removeClass('clone');
+    	var newpanel = cloner.clone();
+		newpanel.removeClass('clone');
 		
-		newrow.attr('deviceid', deviceobj.deviceid);
+		newpanel.attr('deviceid', deviceobj.deviceid);
 
-		var devtitle = newrow.find('.devtitle');
+		var devtitle = newpanel.find('.devtitle');
 		devtitle.text(deviceobj.deviceid);
 		
-		var devtype = newrow.find('.devtype');
+		var devtype = newpanel.find('.devtype');
 		devtype.text(deviceobj.devicetype);
     	
-    	var togbutton = newrow.find('a.togbutton')
+    	var togbutton = newpanel.find('a.togbutton')
     	togbutton.attr('deviceid', deviceobj.deviceid)
     	togbutton.click(bindToggle)
     	
-		var fbutton = newrow.find('a.fbutton')
+		var fbutton = newpanel.find('a.fbutton')
     	fbutton.attr('deviceid', deviceobj.deviceid);
-    	if (deviceobj.flashstatus === "Flashing") {
+    	if (deviceobj.flashstatus == 1) {
 			fbutton.addClass('active');
 		}
 		fbutton.click(bindFlash);
 
-		var dial = newrow.find('.dial');
-		if (deviceobj.devicetype === "LED" || deviceobj.devicetype === "Dimmable Lamp") {
+		var dial = newpanel.find('.clone-dial');
+		var dialdiv = newpanel.find('.dial-div')
+		if (deviceobj.devicetype === "LED" || deviceobj.devicetype === "Light") {
+			dial.val(deviceobj.dimval);
 			dial.attr('deviceid', deviceobj.deviceid);
-			dial.attr('value', deviceobj.dimval);
+			dial.removeClass('clone-dial');
+			dial.addClass('dial');
+			dial.knob(knobvars);
 		}
 		else {
-			dial.remove();
+			dialdiv.remove();
 		}
 		
-		newrow.css({
+		newpanel.css({
 			'opacity' : 0,
 			'top' : '-20px',
 		});
-    	cloner.before(newrow);
-		newrow.animate({
+    	cloner.before(newpanel);
+		newpanel.animate({
 			'opacity' : 1,
 			'top' : '0px'
 		},800);
@@ -100,9 +110,6 @@ $(document).ready(function() {
 		
 		var devtype = row.find('.devtype');
 		devtype.text(deviceobj.devicetype);
-    	
-    	var deviconbg = row.find('.deviconbg')
-    	deviconbg.attr('devicestatus', deviceobj.devicestatus);
     	
     	var togbutton = row.find('a.togbutton');
     	togbutton.attr('deviceid', deviceobj.deviceid);

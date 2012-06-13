@@ -26,7 +26,7 @@ clog = (msg) ->
 
 # Let's define our core object: the Device.
 class Device
-	constructor: (@deviceid, @devicetype, @socket, @devicestatus = 1, @flashstatus = 0, @dimval = 255) ->
+	constructor: (@deviceid, @devicetype, @socket, @devicestatus = 0, @flashstatus = 0, @dimval = 255) ->
 	
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
@@ -280,24 +280,30 @@ process = (message, socket) ->
 
 	# well formed input - add device to list of devices
 	deviceid = msgobj.deviceid
-	devicestatus = msgobj.devicestatus
-	devicetype = msgobj.devicetype
+	devicetype = msgobj.devicetype ? "Light"
+	devicestatus = msgobj.devicestatus ? 0
+	flashstatus = msgobj.flashstatus ? 0
+	dimval = msgobj.dimval ? 255
 	
 	currentdevice = devices[deviceid]
 	
 	if not currentdevice?
 		# TODO: This will cause an error if the same device connects through multiple sockets. Fix it.
-		devices[deviceid] = new Device(deviceid, devicetype, socket, devicestatus)
+		devices[deviceid] = new Device(deviceid, devicetype, socket, devicestatus, flashstatus, dimval)
 		addDevice devices[deviceid]
 		clog "Added: #{deviceid}"
 	else
 		if devicetype? then currentdevice.devicetype = devicetype
 		if devicestatus? then currentdevice.devicestatus = devicestatus
+		if flashstatus? then currentdevice.flashstatus = flashstatus
+		if dimval? then currentdevice.dimval = dimval
 		if socket isnt currentdevice.socket then currentdevice.socket = socket
 		updateDevice
 			deviceid: deviceid
 			devicetype: devicetype
 			devicestatus: devicestatus
+			flashstatus: flashstatus
+			dimval: dimval
 		clog "Updated: #{deviceid}"
 
 io.sockets.on 'connection', (iosocket) ->
