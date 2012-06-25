@@ -45,6 +45,12 @@ class Device
 			@turnOff()
 		else
 			@turnOn()
+			
+	pulse: ->
+		@socket.write JSON.stringify
+			deviceid: @deviceid
+			action: 'pulse'
+		@socket.write separator
 	
 	flash: ->
 		if @flashstatus is 1
