@@ -218,10 +218,14 @@ removeDevice = (device) ->
 
 
 # Routing for a few redirects
+
 app.get '/demo', (req, res) ->
+	res.redirect 'http://www.youtube.com/watch?v=IOncq-OM3_g'
+	
+app.get '/demo2', (req, res) ->
 	res.redirect 'http://www.youtube.com/watch?v=8hsvGO4FHNo'
 
-app.get '/demo2', (req, res) ->
+app.get '/demo3', (req, res) ->
 	res.redirect 'http://www.youtube.com/watch?v=fLkIoJ3BXEw'
 
 app.get '/founders', (req, res) ->
