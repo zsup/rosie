@@ -1,5 +1,5 @@
 {
-    "name": "SWITCH API"
+    "name": "SWITCH-API"
   , "version": "0.1.2"
   , "private": true
   , "main": "app.coffee"
