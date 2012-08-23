@@ -66,20 +66,27 @@ io.set 'reconnect', false
 
 # Let's define our core object: the Device.
 class Device
-	constructor: (@deviceid, @socket, @devicestatus = 0) ->
+	constructor: (@deviceid, @devicestatus = 0, @socket) ->
 		@devicetype = "Device"
+
+	# Stringify for sharing over JSON.
+	stringify: ->
+		JSON.stringify
+			deviceid: @deviceid
+			devicetype: @devicetype
+			devicestatus: @devicestatus
 	
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
 		@devicestatus = 1
 		@message("turnOn")
-		updateStatus this
+		@emit 'update'
 	
 	turnOff: ->
 		clog "Telling #{@deviceid} to turn off"
 		@devicestatus = 0
 		@message("turnOff")
-		updateStatus this
+		@emit 'update'
 	
 	toggle: ->
 		if @devicestatus is 1
@@ -97,26 +104,43 @@ class Device
 		# TODO: Expect a response, and add error-catching
 		@socket.write "#{@deviceid},#{msg}#{separator}"
 
+	# Emit a message to the socket.IO sockets
+	emit: (msg) ->
+		if msg is 'add' or 'remove' or 'update'
+			io.sockets.emit msg, @stringify
+		else
+			throw "Bad socket.IO message"
+
+
 # Lights are just like any other device, except they are also dimmable.
 # They have a special function, "pulse", that flashes the light.
 class Light extends Device
-	constructor: (@deviceid, @socket, @devicestatus = 0, @dimval = 255) ->
+	constructor: (@deviceid, @devicestatus = 0, @dimval = 255, @socket) ->
 		@devicetype = "Light"
+
+	# Stringify for sharing over JSON.
+	stringify: ->
+		JSON.stringify
+			deviceid: @deviceid
+			devicetype: @devicetype
+			devicestatus: @devicestatus
+			dimval: @dimval
 
 	pulse: ->
 		clog "Telling #{@deviceid} to pulse"
-		@message("pulse")
+		@message "pulse"
 	
 	dim: (value) ->
 		value = parseInt value
 		if 0 <= value <= 255
 			clog "Sending dim #{value} to #{@deviceid}"
 			@dimval = value
-			@message("dim#{value}")
-			updateStatus this
+			@message "dim#{value}"
+			@emit 'update'
 		else clog "ERROR: Bad dim value: #{value}"
 			# TODO: Error message back to API user
 	
+
 ##########################################
 #	ROUTING FOR THE WEB APP.               #
 ##########################################
@@ -132,10 +156,8 @@ app.get '/device/:deviceid', (req, res) ->
 
 	if device?
 		clog "Sending status of #{device.deviceid} to client"
-		res.json
-			deviceid: device.deviceid
-			devicetype: device.devicetype
-			devicestatus: device.devicestatus
+		clog device.stringify()
+		res.send 200, device.stringify()
 	else
 		clog "ERR: Request for status of #{req.params.deviceid} received; device not found"
 		res.send 404, "No device connected with ID #{deviceid}."
@@ -196,14 +218,9 @@ app.delete '/device/:deviceid/schedule/:time', (req, res) ->
 # HISTORY.
 ###
 
-app.get '/device/:deviceid/history/', (req, res) ->
+app.get '/device/:deviceid/history', (req, res) ->
 	# TODO: Implement
 	res.send 460, "History has not yet been implemented."
-
-# TODO: Refactor the following set of functions into one "emit" function
-flashToggle = (device) ->
-	device.toggle()
-	clog "(Due to flashing)"
 
 
 
@@ -220,7 +237,7 @@ server = net.createServer (socket) ->
 	socket.on 'close', ->
 		for deviceid, device of devices
 			if device.socket is socket
-				removeDevice device
+				device.emit 'remove'
 				delete devices[deviceid]
 				clog "Device #{deviceid} disconnected"
 		clog 'TCP client disconnected'
@@ -265,68 +282,46 @@ processmsg = (message, socket) ->
 		clog "Not enough info"
 		return
 
-
-	# well formed input - add device to list of devices
-	deviceid = msgobj.deviceid
-	devicetype = msgobj.devicetype ? "Light"
-	devicestatus = msgobj.devicestatus ? 0
-	dimval = msgobj.dimval ? 255
-	
-	currentdevice = devices[deviceid]
+	currentdevice = devices[msgobj.deviceid]
 	
 	if not currentdevice?
-		# TODO: This will cause an error if the same device connects through multiple sockets. Fix it.
+		# well formed input - add device to list of devices
+		deviceid = msgobj.deviceid
+		devicetype = msgobj.devicetype ? "Light"
+		devicestatus = msgobj.devicestatus ? 0
+		dimval = msgobj.dimval ? 255
+
 		if devicetype = "Light"
-			devices[deviceid] = new Light(deviceid, devicetype, socket, devicestatus, dimval)
+			devices[deviceid] = new Light(deviceid, devicestatus, dimval, socket)
 		else
-			devices[deviceid] = new Device(deviceid, devicetype, socket, devicestatus)
-		addDevice devices[deviceid]
+			devices[deviceid] = new Device(deviceid, devicestatus, socket)
+		devices[deviceid].emit 'add'
 		clog "Added: #{deviceid}"
 	else
-		if devicestatus? then currentdevice.devicestatus = devicestatus
-		if dimval? then currentdevice.dimval = dimval
+		if msgobj.devicestatus? then currentdevice.devicestatus = msgobj.devicestatus
+		if msgobj.dimval? then currentdevice.dimval = msgobj.dimval
 		if socket isnt currentdevice.socket then currentdevice.socket = socket
-		updateDevice currentdevice
-		clog "Updated: #{deviceid}"
+		currentdevice.emit 'update'
+		clog "Updated: #{msgobj.deviceid}"
 
 
 
 ############################################################################################
-#	SOCKET.IO EMISSIONS                                                                      #
+#	SOCKET.IO communications                                                                 #
 #                                                                                          #
 # Perfect for telling developers/apps when a device's status has changed.                  #
 # Also gives the developer a list of devices when they connect. Good for testing.          #
 # May be implemented in a different way in the future (PubSub?) but this works for now.    #
+#                                                                                          #
+# Emit function deprecated. Using an emit method in the device instead.                    #
 ############################################################################################
-
-updateStatus = (device) ->
-	if device.devicetype == "Light"
-		io.sockets.emit 'statuschange',
-			deviceid: device.deviceid
-			devicestatus: device.devicestatus
-			dimval: device.dimval
-	else
-		io.sockets.emit 'statuschange',
-			deviceid: device.deviceid
-			devicestatus: device.devicestatus
-
-addDevice = (device) ->
-	io.sockets.emit 'adddevice',
-		deviceid: device.deviceid
-		devicetype: device.devicetype
-		devicestatus: device.devicestatus
-		dimval: device.dimval
-
-removeDevice = (device) ->
-	io.sockets.emit 'removedevice',
-		deviceid: device.deviceid
 
 # When a socket connects, give it a list of devices by adding them in sequence.
 io.sockets.on 'connection', (iosocket) ->
 	clog "Got new socket"
 	for deviceid, device of devices
 		clog "Add device #{device.deviceid}"
-		addDevice(device)
+		device.emit 'add'
 			
 	iosocket.on 'disconnect', ->
     clog "Socket disconnected"
