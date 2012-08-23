@@ -3,3 +3,4 @@
 #
 
 ssh ubuntu@swtch.co -i roseykey.pem
+cd /var/rosey/rosey

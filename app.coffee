@@ -1,7 +1,6 @@
-###
-	Basic requirements and initialization
-###
-
+##########################################
+#	BASIC REQUIREMENTS AND INITIALIZATION. #
+##########################################
 
 # Require libraries
 net = require 'net'
@@ -14,30 +13,72 @@ devices = {}
 buffer = ""
 separator = "\n"
 
+# Ports
+tcpport = 1307
+
 # Some helper functions.
 ts = ->
-	# TODO: CoffeeScript-ize this
 	d = new Date().toTimeString()
 	index = d.indexOf " GMT"
-	d = d.slice(0,index)
+	d = d.slice 0, index
 
 clog = (msg) ->
 	console.log "#{ts()}: #{msg}"
 
+
+###
+#	EXPRESS WEB SERVER AND SOCKET.IO CONFIGURATION
+###
+
+express = require 'express'
+routes = require './routes'
+path = require 'path'
+app = express()
+server = http.createServer app
+io = require('socket.io').listen(server)
+
+# Express configuration.
+
+app.configure ->
+	@set 'port', process.env.PORT || 3000
+	@set 'views', "#{__dirname}/views"
+	@set 'view engine', 'jade'
+	@use express.favicon()
+	@use express.bodyParser()
+	@use express.methodOverride()
+	@use app.router
+	@use express.static path.join __dirname, 'public'
+
+app.configure 'development', ->
+	@use express.errorHandler
+
+server.listen app.get('port'), ->
+  clog "Express server listening on port " + app.get('port')
+
+# Socket.IO configuration.
+io.set 'log level', 1
+io.set 'reconnect', false
+
+
+###
+# OBJECT DEFINITIONS
+###
+
 # Let's define our core object: the Device.
 class Device
-	constructor: (@deviceid, @devicetype, @socket, @devicestatus = 0, @flashstatus = 0, @dimval = 255) ->
+	constructor: (@deviceid, @socket, @devicestatus = 0) ->
+		@devicetype = "Device"
 	
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
 		@devicestatus = 1
-		@message()
+		@message("turnOn")
 		updateStatus this
 	
 	turnOff: ->
 		clog "Telling #{@deviceid} to turn off"
 		@devicestatus = 0
-		@message()
+		@message("turnOff")
 		updateStatus this
 	
 	toggle: ->
@@ -45,105 +86,50 @@ class Device
 			@turnOff()
 		else
 			@turnOn()
-			
+
+	# Schedule an action in the future.
+	# TODO: Actually implement this
+	schedule: (time) ->
+		throw "Scheduling has not yet been implemented."
+	
+	# Send the requested message to the device
+	message: (msg) ->
+		# TODO: Expect a response, and add error-catching
+		@socket.write "#{@deviceid},#{msg}#{separator}"
+
+# Lights are just like any other device, except they are also dimmable.
+# They have a special function, "pulse", that flashes the light.
+class Light extends Device
+	constructor: (@deviceid, @socket, @devicestatus = 0, @dimval = 255) ->
+		@devicetype = "Light"
+
 	pulse: ->
-		@socket.write JSON.stringify
-			deviceid: @deviceid
-			action: 'pulse'
-		@socket.write separator
+		clog "Telling #{@deviceid} to pulse"
+		@message("pulse")
 	
-	flash: ->
-		if @flashstatus is 1
-			clog "Deactivating flash for #{@deviceid}"
-			clearInterval @flashID
-			delete @flashID
-			@flashstatus = 0
-			updateFlashStatus this
-		else
-			clog "Activating flash for #{@deviceid}"
-			# first toggle once
-			@toggle()
-		
-			# then set flash timer
-			# TODO: Make this call the toggle() function instead of the external flashToggle function
-			@flashID = setInterval flashToggle, 750, this
-			@flashstatus = 1
-			updateFlashStatus this
-	
-	# TODO: Should be put in a separate "dimmable device" class that extends Device
 	dim: (value) ->
 		value = parseInt value
-		if 0 <= value <= 256
-			if value is 0 then value = 1
-			if value is 256 then value = 255
+		if 0 <= value <= 255
 			clog "Sending dim #{value} to #{@deviceid}"
 			@dimval = value
-			@message()
-			updateDimStatus this
-		else clog "Bad dim value: #{value}"
+			@message("dim#{value}")
+			updateStatus this
+		else clog "ERROR: Bad dim value: #{value}"
+			# TODO: Error message back to API user
 	
-	# Send the updated device info downstream to the router via JSON.
-	message: ->
-		# TODO: Expect a response, and add error-catching
-		@socket.write JSON.stringify
-			deviceid: @deviceid
-			devicetype: @devicetype
-			devicestatus: @devicestatus
-			dimval: @dimval
-		@socket.write separator
-		
+##########################################
+#	ROUTING FOR THE WEB APP.               #
+##########################################
 
 ###
-	Express Web Server.
+# GETS.
 ###
-
-
-express = require 'express'
-routes = require './routes'
-app = module.exports = express.createServer()
-io = require('socket.io').listen(app)
-
-# Configuration
-io.set 'log level', 1
-io.set 'reconnect', false
-
-app.configure ->
-	@set 'views', "#{__dirname}/views"
-	@set 'view engine', 'jade'
-	@use express.bodyParser()
-	@use express.methodOverride()
-	@use express.cookieParser()
-	@use express.session
-		secret: 'your secret here'
-	@use app.router
-	@use express.static "#{__dirname}/public" 
-
-app.configure 'development', ->
-	@use express.errorHandler
-		dumpExceptions: true
-		showStack: true
-
-app.configure 'production', ->
-	@use express.errorHandler()
-	
-###
-	Routing for the web-app
-###
-
-loadDevices = (req, res, next) ->
-	if devices?
-		req.devices = devices
-		next()
-
-# Load the core site
-app.get '/', loadDevices, (req, res) ->
-	res.render 'index',
-		title: "SWITCH"
-		devices: devices
 
 # Routing for 'get status' HTTP requests
 app.get '/device/:deviceid', (req, res) ->
-	device = devices[req.params.deviceid]
+	deviceid = req.params.deviceid
+	device = devices[deviceid]
+
 	if device?
 		clog "Sending status of #{device.deviceid} to client"
 		res.json
@@ -151,13 +137,24 @@ app.get '/device/:deviceid', (req, res) ->
 			devicetype: device.devicetype
 			devicestatus: device.devicestatus
 	else
-		clog "Request for status of #{req.params.deviceid} received; device not found"
-		res.send "No device at that address", 404
+		clog "ERR: Request for status of #{req.params.deviceid} received; device not found"
+		res.send 404, "No device connected with ID #{deviceid}."
+
+# Routing for seeing device logs.
+app.get '/device/:deviceid/logs', (req, res) ->
+	# TODO: Implement this feature
+	res.send 404, "Sorry, this feature has not yet been implemented."
+
+
+###
+# COMMANDS.
+###
 
 # Routing for 'command' http requests (API)
-app.get '/device/:deviceid/:action/:param?', (req, res) ->
+app.put '/device/:deviceid/:action/:param?', (req, res) ->
 	deviceid = req.params.deviceid
 	action = req.params.action
+
 	if req.params.param?
 		param = req.params.param
 		clog "HTTP request received for device #{deviceid} to #{action} to #{param}"
@@ -166,78 +163,53 @@ app.get '/device/:deviceid/:action/:param?', (req, res) ->
 		clog "HTTP request received for device #{deviceid} to #{action}"
 	
 	# If the device is connected, send it a message
-	device = devices[deviceid]
-	if device? and action?
+	
+	if devices[deviceid]?
+		device = devices[deviceid]
 		try
 			device[action](param)
-			res.send "Message sent to #{deviceid}."
+			res.send 200, "Message sent to #{deviceid} to #{action}."
 		catch err
-			res.send "Not a valid request."
+			res.send 460, "Not a valid request. #{err}"
 			clog "Not a valid request."
-	else res.send "No device connected with ID #{deviceid}"
+	else
+		res.send 404, "No device connected with ID #{deviceid}"
+
+
+###
+# SCHEDULING.
+###
+
+# Schedule a new action. Has not yet been implemented.
+app.post '/device/:deviceid/schedule/:action/:time', (req, res) ->
+	# TODO: Implement
+	res.send 460, "Scheduling has not yet been implemented."
+
+# Delete a scheduled action. You only need to know the timecode.
+# Also you must be the one who scheduled an action in the first place to delete it.
+app.delete '/device/:deviceid/schedule/:time', (req, res) ->
+	# TODO: Implement
+	res.send 460, "Scheduling has not yet been implemented."
+
+
+###
+# HISTORY.
+###
+
+app.get '/device/:deviceid/history/', (req, res) ->
+	# TODO: Implement
+	res.send 460, "History has not yet been implemented."
 
 # TODO: Refactor the following set of functions into one "emit" function
 flashToggle = (device) ->
 	device.toggle()
 	clog "(Due to flashing)"
 
-updateFlashStatus = (device) ->
-	io.sockets.emit 'flashstatuschange',
-		deviceid: device.deviceid
-		flashstatus: device.flashstatus
-
-updateStatus = (device) ->
-	io.sockets.emit 'statuschange',
-		deviceid: device.deviceid
-		devicestatus: device.devicestatus
-
-updateDimStatus = (device) ->
-	io.sockets.emit 'dimstatuschange',
-		deviceid: device.deviceid
-		dimval: device.dimval
-
-addDevice = (device) ->
-	io.sockets.emit 'adddevice',
-		deviceid: device.deviceid
-		devicetype: device.devicetype
-		devicestatus: device.devicestatus
-		flashstatus: device.flashstatus
-		dimval: device.dimval
-
-updateDevice = (device) ->
-	io.sockets.emit 'updatedevice',
-		deviceid: device.deviceid
-		devicetype: device.devicetype
-		devicestatus: device.devicestatus
-		flashstatus: device.flashstatus
-		dimval: device.dimval
-
-removeDevice = (device) ->
-	io.sockets.emit 'removedevice',
-		deviceid: device.deviceid
 
 
-# Routing for a few redirects
-
-app.get '/demo', (req, res) ->
-	res.redirect 'http://www.youtube.com/watch?v=IOncq-OM3_g'
-	
-app.get '/demo2', (req, res) ->
-	res.redirect 'http://www.youtube.com/watch?v=8hsvGO4FHNo'
-
-app.get '/demo3', (req, res) ->
-	res.redirect 'http://www.youtube.com/watch?v=fLkIoJ3BXEw'
-
-app.get '/founders', (req, res) ->
-	res.redirect 'http://www.youtube.com/watch?v=71ucyxj1wbk'
-
-app.listen 80, ->
-	clog "Express server listening on port #{app.address().port} in #{app.settings.env} mode"
-
-###
-	TCP Server for devices.
-###
-
+##########################################
+#	TCP SERVER FOR DEVICES.                #
+##########################################
 
 # Create the TCP server to communicate with the Arduino.
 server = net.createServer (socket) ->
@@ -246,34 +218,36 @@ server = net.createServer (socket) ->
 	socket.setKeepAlive true
 
 	socket.on 'close', ->
-		for id, device of devices
+		for deviceid, device of devices
 			if device.socket is socket
 				removeDevice device
-				delete devices[id]
-				clog "Device #{id} disconnected"
+				delete devices[deviceid]
+				clog "Device #{deviceid} disconnected"
 		clog 'TCP client disconnected'
 	
 	# Receive and parse incoming data
 	socket.on 'data', (chunk) ->
 		buffer += chunk
-		clog "Message received: #{chunk}" 
-		# TODO: CoffeeScript-ize this section
+		clog "Message received: #{chunk}"
 		separatorIndex = buffer.indexOf separator
 		foundMessage = separatorIndex != -1
 		
 		while separatorIndex != -1
 			message = buffer.slice 0, separatorIndex
-			# clog("Found message: " + message);
-			process message, socket
+			processmsg message, socket
 			buffer = buffer.slice(separatorIndex + 1)
 			separatorIndex = buffer.indexOf separator
 
-# Fire up the TCP server bound to port 1307
-server.listen 1307, ->
-	clog 'TCP server bound to port 1307'
+# Fire up the TCP server
+server.listen tcpport, ->
+	clog "TCP server bound to port #{tcpport}"
 
-# Process messages
-process = (message, socket) ->
+# Process messages.
+#
+# Note: this is only used for instantiation right now.
+# In the future we'll have to break this up.
+#
+processmsg = (message, socket) ->
 	message = message.trim()
 	clog "Processing message: #{message}"
 	failure = false
@@ -291,46 +265,87 @@ process = (message, socket) ->
 		clog "Not enough info"
 		return
 
+
 	# well formed input - add device to list of devices
 	deviceid = msgobj.deviceid
 	devicetype = msgobj.devicetype ? "Light"
 	devicestatus = msgobj.devicestatus ? 0
-	flashstatus = msgobj.flashstatus ? 0
 	dimval = msgobj.dimval ? 255
 	
 	currentdevice = devices[deviceid]
 	
 	if not currentdevice?
 		# TODO: This will cause an error if the same device connects through multiple sockets. Fix it.
-		devices[deviceid] = new Device(deviceid, devicetype, socket, devicestatus, flashstatus, dimval)
+		if devicetype = "Light"
+			devices[deviceid] = new Light(deviceid, devicetype, socket, devicestatus, dimval)
+		else
+			devices[deviceid] = new Device(deviceid, devicetype, socket, devicestatus)
 		addDevice devices[deviceid]
 		clog "Added: #{deviceid}"
 	else
-		if devicetype? then currentdevice.devicetype = devicetype
 		if devicestatus? then currentdevice.devicestatus = devicestatus
-		if flashstatus? then currentdevice.flashstatus = flashstatus
 		if dimval? then currentdevice.dimval = dimval
 		if socket isnt currentdevice.socket then currentdevice.socket = socket
-		updateDevice
-			deviceid: deviceid
-			devicetype: devicetype
-			devicestatus: devicestatus
-			flashstatus: flashstatus
-			dimval: dimval
+		updateDevice currentdevice
 		clog "Updated: #{deviceid}"
 
-io.sockets.on 'connection', (iosocket) ->
-	clog "Got new socket"
-	# TODO: Now that this is working, take this out from the page template
-	for id, device of devices
-		device = devices[id]
-		clog "Emitting about #{device.deviceid}"
-		iosocket.emit 'statuschange',
+
+
+############################################################################################
+#	SOCKET.IO EMISSIONS                                                                      #
+#                                                                                          #
+# Perfect for telling developers/apps when a device's status has changed.                  #
+# Also gives the developer a list of devices when they connect. Good for testing.          #
+# May be implemented in a different way in the future (PubSub?) but this works for now.    #
+############################################################################################
+
+updateStatus = (device) ->
+	if device.devicetype == "Light"
+		io.sockets.emit 'statuschange',
 			deviceid: device.deviceid
 			devicestatus: device.devicestatus
-		iosocket.emit 'dimstatuschange',
-			deviceid: device.deviceid,
 			dimval: device.dimval
+	else
+		io.sockets.emit 'statuschange',
+			deviceid: device.deviceid
+			devicestatus: device.devicestatus
+
+addDevice = (device) ->
+	io.sockets.emit 'adddevice',
+		deviceid: device.deviceid
+		devicetype: device.devicetype
+		devicestatus: device.devicestatus
+		dimval: device.dimval
+
+removeDevice = (device) ->
+	io.sockets.emit 'removedevice',
+		deviceid: device.deviceid
+
+# When a socket connects, give it a list of devices by adding them in sequence.
+io.sockets.on 'connection', (iosocket) ->
+	clog "Got new socket"
+	for deviceid, device of devices
+		clog "Add device #{device.deviceid}"
+		addDevice(device)
 			
 	iosocket.on 'disconnect', ->
-    	clog "Socket disconnected"
+    clog "Socket disconnected"
+
+
+##########################################
+#	OTHER JUNK.                            #
+##########################################
+
+# Routing for a few redirects
+
+app.get '/demo', (req, res) ->
+	res.redirect 'http://www.youtube.com/watch?v=IOncq-OM3_g'
+	
+app.get '/demo2', (req, res) ->
+	res.redirect 'http://www.youtube.com/watch?v=8hsvGO4FHNo'
+
+app.get '/demo3', (req, res) ->
+	res.redirect 'http://www.youtube.com/watch?v=fLkIoJ3BXEw'
+
+app.get '/founders', (req, res) ->
+	res.redirect 'http://www.youtube.com/watch?v=71ucyxj1wbk'
