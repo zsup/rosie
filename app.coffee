@@ -40,7 +40,7 @@ io = require('socket.io').listen(server)
 # Express configuration.
 
 app.configure ->
-	@set 'port', process.env.PORT || 3000
+	@set 'port', 80 # process.env.PORT || 3000
 	@set 'views', "#{__dirname}/views"
 	@set 'view engine', 'jade'
 	@use express.favicon()
