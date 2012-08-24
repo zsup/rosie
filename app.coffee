@@ -59,6 +59,26 @@ server.listen app.get('port'), ->
 io.set 'log level', 1
 io.set 'reconnect', false
 
+###
+# MONGODB AND MONGOOSE CONFIGURATION
+###
+
+mongoose = require 'mongoose'
+db = mongoose.createConnection 'mongodb://rosey:jetson@alex.mongohq.com:10092/Spark-History' 
+
+Schema = mongoose.Schema
+ObjectId = Schema.ObjectId
+
+actionSchema = new Schema
+	deviceid: String
+	time: Date
+	action: String
+	param: String
+	devicestatus: Boolean
+	dimval: Number
+
+Action = db.model('Action', actionSchema)
+
 
 ###
 # OBJECT DEFINITIONS
@@ -69,6 +89,21 @@ class Device
 	constructor: (@deviceid, @devicestatus = 0, @socket) ->
 		@devicetype = "Device"
 
+	commands: [
+		"turnOn"
+		"turnOff"
+		"toggle"
+		"schedule"
+	]
+
+	do: (action, param) ->
+		if @commands.indexOf(action) is -1
+			throw "#{action} is not a valid command"
+		else
+			@[action](param)
+			@emit 'update'
+			@store action, param
+
 	# Stringify for sharing over JSON.
 	stringify: ->
 		JSON.stringify
@@ -78,15 +113,13 @@ class Device
 	
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
+		@message "turnOn"
 		@devicestatus = 1
-		@message("turnOn")
-		@emit 'update'
 	
 	turnOff: ->
 		clog "Telling #{@deviceid} to turn off"
+		@message "turnOff"
 		@devicestatus = 0
-		@message("turnOff")
-		@emit 'update'
 	
 	toggle: ->
 		if @devicestatus is 1
@@ -111,12 +144,32 @@ class Device
 		else
 			throw "Bad socket.IO message"
 
+	# Add the action to the history
+	store: (action, param) ->
+		x = new Action
+			deviceid: @deviceid
+			time: new Date().toISOString()
+			action: action
+			param: param
+			devicestatus: @devicestatus
+		x.save()
+		clog "Stored #{action} in database"
+
 
 # Lights are just like any other device, except they are also dimmable.
 # They have a special function, "pulse", that flashes the light.
 class Light extends Device
 	constructor: (@deviceid, @devicestatus = 0, @dimval = 255, @socket) ->
 		@devicetype = "Light"
+
+	commands: [
+		"turnOn"
+		"turnOff"
+		"toggle"
+		"schedule"
+		"dim"
+		"pulse"
+	]
 
 	# Stringify for sharing over JSON.
 	stringify: ->
@@ -134,11 +187,21 @@ class Light extends Device
 		value = parseInt value
 		if 0 <= value <= 255
 			clog "Sending dim #{value} to #{@deviceid}"
-			@dimval = value
 			@message "dim#{value}"
-			@emit 'update'
+			@dimval = value
 		else clog "ERROR: Bad dim value: #{value}"
 			# TODO: Error message back to API user
+
+	# Add the action to the history
+	store: (action) ->
+		x = new Action
+			deviceid: @deviceid
+			time: new Date().toISOString()
+			action: action
+			devicestatus: @devicestatus
+			dimval: @dimval
+		x.save()
+		clog "Stored #{action} in database"
 	
 
 ##########################################
@@ -189,7 +252,7 @@ app.put '/device/:deviceid/:action/:param?', (req, res) ->
 	if devices[deviceid]?
 		device = devices[deviceid]
 		try
-			device[action](param)
+			device.do(action, param)
 			res.send 200, "Message sent to #{deviceid} to #{action}."
 		catch err
 			res.send 460, "Not a valid request. #{err}"
@@ -219,9 +282,25 @@ app.delete '/device/:deviceid/schedule/:time', (req, res) ->
 ###
 
 app.get '/device/:deviceid/history', (req, res) ->
-	# TODO: Implement
-	res.send 460, "History has not yet been implemented."
+	deviceid = req.params.deviceid
 
+	Action.find { deviceid: deviceid }, (err, actions) ->
+		if err
+			res.send 404, "Database error."
+		else if actions.length is 0
+			res.send 404, "No history for that device. Doesn't exist... yet."
+		else
+			response = {}
+			response.deviceid = deviceid
+			for action in actions
+				do (action) ->
+					response[action._id] = {
+						time: action.time
+						action: action.action
+						devicestatus: action.devicestatus
+						dimval: action.dimval
+					}
+			res.send 200, response
 
 
 ##########################################
@@ -291,7 +370,7 @@ processmsg = (message, socket) ->
 		devicestatus = msgobj.devicestatus ? 0
 		dimval = msgobj.dimval ? 255
 
-		if devicetype = "Light"
+		if devicetype is "Light"
 			devices[deviceid] = new Light(deviceid, devicestatus, dimval, socket)
 		else
 			devices[deviceid] = new Device(deviceid, devicestatus, socket)
