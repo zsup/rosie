@@ -213,6 +213,8 @@
 
         this._touch = function (e) {
 
+
+
             var touchMove = function (e) {
 
                 var v = s.xy2val(
@@ -234,6 +236,15 @@
 
             // get touches index
             this.t = k.c.t(e);
+
+            var btn = s.testdistance(
+                            e.originalEvent.touches[s.t].pageX,
+                            e.originalEvent.touches[s.t].pageY);
+
+            if (btn) {
+                s.toggle();
+                return;
+            }
 
             // First touch
             touchMove(e);
