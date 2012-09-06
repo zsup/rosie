@@ -209,6 +209,13 @@ class Light extends Device
 ##########################################
 
 ###
+# FRONT-END FOR TESTING.
+###
+app.get '/', (req, res) ->
+	res.render 'index.jade', { devices: devices }
+		# TBD
+
+###
 # GETS.
 ###
 

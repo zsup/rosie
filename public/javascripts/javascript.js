@@ -1,18 +1,24 @@
 $(document).ready(function() {
-
-	$('a.togbutton').click(bindToggle);
-	$('a.flashbutton').click(bindFlash);
-	$('a.dimbutton').click(bindSendDim);
 	
 	var knobvars = {
 		'min': 0 ,
 		'max': 255 ,
-		'width': 166 ,
-		'fgColor' : "yellow" ,
-		'displayPrevious' : true ,
-		'release': function (value, ipt) {
-			var deviceid = ipt.attr("deviceid");
-			$.ajax('/device/' + deviceid + '/dim/' + value);
+		'width': 100 ,
+		'height': 100 ,
+		'thickness': .4,
+		'fgColor' : "#00AEEF" ,
+		'displayInput' : false ,
+		'release': function (value, did) {
+			$.ajax('device/' + did + '/dim/' + value, {type: "PUT"});
+		},
+		'clicked': function (did) {
+			$.ajax('device/' + did + '/toggle', {type: "PUT"});
+		},
+		'turnon': function (did) {
+			$.ajax('device/' + did + '/turnOn', {type: "PUT"});
+		},
+		'turnoff': function (did) {
+			$.ajax('device/' + did + '/turnOff', {type: "PUT"});
 		}
 	};
 	
@@ -23,10 +29,13 @@ $(document).ready(function() {
 		reconnect: false
 	});
 
-	socket.on('connect', function () {
-		// $('.brand').addClass('srvrok');
-	});
+	// New simplified socket.io functions. Need to write these.
+	socket.on('add', function (device) {});
+	socket.on('remove', function (device) {});
+	socket.on('update', function (device) {});
 	
+	// Old complex socket.io functions. Use only for reference.
+	/*
 	socket.on('statuschange', function (statusobj) {
 		//alert('got a status change for ' + statusobj['deviceid']+" to be " + statusobj["devicestatus"]);
 		var deviceid = statusobj["deviceid"];
@@ -41,19 +50,6 @@ $(document).ready(function() {
 		
 		// TODO: Fix this for the knob
 		$('.dial[deviceid="'+deviceid+'"]').val(dimval).trigger('configure')
-	});
-
-	socket.on('flashstatuschange', function (statusobj) {
-		deviceid = statusobj["deviceid"];
-		flashstatus = statusobj["flashstatus"];
-		if (flashstatus == 1) {
-			fbutton = $('a.fbutton[deviceid=\"'+deviceid+'\"]')
-			fbutton.addClass('active');
-		}
-		else {
-			fbutton = $('a.fbutton[deviceid=\"'+deviceid+'\"]')
-			fbutton.removeClass('active');
-		};
 	});
 
 	socket.on('adddevice', function (deviceobj) {
@@ -132,8 +128,12 @@ $(document).ready(function() {
 		// TBD
 	})
 
+*/
+
 });
 
+// Old binding functions. Use only for reference.
+/*
 function bindToggle(e) {
 	e.preventDefault();
 	deviceid = $(this).attr('deviceid');
@@ -152,3 +152,4 @@ function bindSendDim(e) {
 	dimval = $(this).attr('dimval');
 	$.ajax('/device/' + deviceid + '/dim/' + dimval);		
 };
+*/

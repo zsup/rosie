@@ -1,40 +1,27 @@
-div.navbar.navbar-fixed-top
-	div.navbar-inner
-		div.container
-			a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
-				span.icon-bar
-				span.icon-bar
-				span.icon-bar
-			a.brand(href="#")
-			div.nav-collapse
-				ul.nav.pull-right
-					li.active
-						a(href="#") Home
-					li
-						a(href="#") About
-					li
-						a(href="#") Contact
+extends layout
 
-div.container
-	each device in devices
-		div.span3.panel(deviceid=device.deviceid)
-			h3.devtype.pull-right= device.devicetype
-			h3.devtitle= device.deviceid
-			if ( device.devicetype == "LED" || device.devicetype == "Dimmable Light" )
+block content
+	div.navbar.navbar-fixed-top
+		div.navbar-inner
+			div.container
+				a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
+					span.icon-bar
+					span.icon-bar
+					span.icon-bar
+				a.brand(href="#")
+				div.nav-collapse
+					ul.nav.pull-right
+						li.active
+							a(href="#") Home
+						li
+							a(href="#") About
+						li
+							a(href="#") Contact
+
+	div.container
+		each device in devices
+			div.span2.panel(data-deviceid=device.deviceid)
+				div.devicetitle
+					h3= device.deviceid
 				div.dial-div
-					input.dial(type="text", deviceid=device.deviceid, value=device.dimval)
-			div
-				a.btn.btn-large.btn-primary.togbutton(deviceid=device.deviceid, href="#") Toggle
-				if device.flashstatus != "Flashing"
-					a.btn.btn-large.btn-primary.fbutton.pull-right.flashbutton(deviceid=device.deviceid, href="#") Flash
-				else
-					a.btn.btn-large.btn-primary.active.fbutton.pull-right.stopflashbutton(deviceid=device.deviceid, href="#") Flash
-
-	div.span3.panel.clone(deviceid="")
-		h3.devtype.pull-right &nbsp;
-		h3.devtitle &nbsp;
-		div.dial-div
-			input.clone-dial(type="text", deviceid = "", value="255")
-		div
-			a.btn.btn-large.btn-primary.togbutton(deviceid="", href="#") Toggle
-			a.btn.btn-large.btn-primary.fbutton.pull-right.flashbutton(deviceid="", href="#") Flash
+					input.dial(type="text", data-deviceid=device.deviceid, data-devicestatus=device.devicestatus, value=device.dimval)
