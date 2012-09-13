@@ -135,7 +135,7 @@ class Device
 	# Send the requested message to the device
 	message: (msg) ->
 		# TODO: Expect a response, and add error-catching
-		@socket.write "#{@deviceid},#{msg}#{separator}"
+		@socket.write "{#{@deviceid}:#{msg}}#{separator}"
 
 	# Emit a message to the socket.IO sockets
 	emit: (msg) ->
