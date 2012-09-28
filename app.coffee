@@ -64,7 +64,7 @@ io.set 'reconnect', false
 ###
 
 mongoose = require 'mongoose'
-db = mongoose.createConnection 'mongodb://rosey:jetson@alex.mongohq.com:10092/Spark-History' 
+db = mongoose.createConnection 'mongodb://rosey:jetson@alex.mongohq.com:10092/Spark-History'
 
 Schema = mongoose.Schema
 ObjectId = Schema.ObjectId
@@ -96,13 +96,14 @@ class Device
 		"schedule"
 	]
 
-	do: (action, param) ->
+	do: (action, params) ->
 		if @commands.indexOf(action) is -1
 			throw "#{action} is not a valid command"
 		else
-			@[action](param)
+			return_values = @[action](params)
 			@emit 'update'
-			@store action, param
+			@store action, params
+			return_values
 
 	# Stringify for sharing over JSON.
 	stringify: ->
@@ -110,17 +111,17 @@ class Device
 			deviceid: @deviceid
 			devicetype: @devicetype
 			devicestatus: @devicestatus
-	
+
 	turnOn: ->
 		clog "Telling #{@deviceid} to turn on"
 		@message "turnOn"
 		@devicestatus = 1
-	
+
 	turnOff: ->
 		clog "Telling #{@deviceid} to turn off"
 		@message "turnOff"
 		@devicestatus = 0
-	
+
 	toggle: ->
 		if @devicestatus is 1
 			@turnOff()
@@ -131,7 +132,7 @@ class Device
 	# TODO: Actually implement this
 	schedule: (time) ->
 		throw "Scheduling has not yet been implemented."
-	
+
 	# Send the requested message to the device
 	message: (msg) ->
 		# TODO: Expect a response, and add error-catching
@@ -145,12 +146,12 @@ class Device
 			throw "Bad socket.IO message"
 
 	# Add the action to the history
-	store: (action, param) ->
+	store: (action, params) ->
 		x = new Action
 			deviceid: @deviceid
 			time: new Date().toISOString()
 			action: action
-			param: param
+			params: params
 			devicestatus: @devicestatus
 		x.save()
 		clog "Stored #{action} in database"
@@ -169,6 +170,7 @@ class Light extends Device
 		"schedule"
 		"dim"
 		"pulse"
+		"fade"
 	]
 
 	# Stringify for sharing over JSON.
@@ -182,15 +184,35 @@ class Light extends Device
 	pulse: ->
 		clog "Telling #{@deviceid} to pulse"
 		@message "pulse"
-	
-	dim: (value) ->
-		value = parseInt value
+
+	dim: (params) ->
+		value = parseInt params[0]
 		if 0 <= value <= 255
 			clog "Sending dim #{value} to #{@deviceid}"
 			@message "dim#{value}"
 			@dimval = value
 		else clog "ERROR: Bad dim value: #{value}"
 			# TODO: Error message back to API user
+
+	fade: (params) ->
+		target = params[0]
+		duration_seconds = params[1] ? 0.4
+		if isNaN(target)
+			throw "Fade target is not a number."
+		max_target = 16
+		if target < 0 or target > max_target or Math.floor(target) != target
+			throw "Fade target must be an integer between 0 and #{max_target}, inclusive."
+
+		if isNaN(duration_seconds) or duration_seconds < 0 then duration_seconds = 0.4
+		if duration_seconds > 655.35 then duration_seconds = 655.35
+
+		device_target = Math.round(255.0 * target / max_target)
+		device_duration = Math.round(duration_seconds * 100)
+
+		clog "Telling #{@deviceid} to fade to #{target} over #{duration_seconds} seconds"
+		@message "fade #{device_target} #{device_duration}"
+		@dimval = device_target
+		[target, device_duration / 100.0]
 
 	# Add the action to the history
 	store: (action) ->
@@ -202,7 +224,7 @@ class Light extends Device
 			dimval: @dimval
 		x.save()
 		clog "Stored #{action} in database"
-	
+
 
 ##########################################
 #	ROUTING FOR THE WEB APP.               #
@@ -242,6 +264,19 @@ app.get '/device/:deviceid/logs', (req, res) ->
 # COMMANDS.
 ###
 
+app.put '/device/:deviceid/fade/:target/:duration_seconds', (req, res) ->
+	device = devices[req.params.deviceid]
+	if device?
+		target = parseInt req.params.target, 10
+		duration_seconds = parseFloat req.params.duration_seconds
+		try
+			[target, duration_seconds] = device.do('fade', [target, duration_seconds])
+			res.send 200, "Message sent to #{device.deviceid} to fade to #{target} over #{duration_seconds} seconds"
+		catch err
+			res.send 400, "Not a valid request. #{err}"
+	else
+		res.send 404, "No device connected with ID #{req.params.deviceid}"
+
 # Routing for 'command' http requests (API)
 app.put '/device/:deviceid/:action/:param?', (req, res) ->
 	deviceid = req.params.deviceid
@@ -253,13 +288,13 @@ app.put '/device/:deviceid/:action/:param?', (req, res) ->
 	else
 		param = ""
 		clog "HTTP request received for device #{deviceid} to #{action}"
-	
+
 	# If the device is connected, send it a message
-	
+
 	if devices[deviceid]?
 		device = devices[deviceid]
 		try
-			device.do(action, param)
+			device.do(action, [param])
 			res.send 200, "Message sent to #{deviceid} to #{action}."
 		catch err
 			res.send 460, "Not a valid request. #{err}"
@@ -327,14 +362,14 @@ server = net.createServer (socket) ->
 				delete devices[deviceid]
 				clog "Device #{deviceid} disconnected"
 		clog 'TCP client disconnected'
-	
+
 	# Receive and parse incoming data
 	socket.on 'data', (chunk) ->
 		buffer += chunk
 		clog "Message received: #{chunk}"
 		separatorIndex = buffer.indexOf separator
 		foundMessage = separatorIndex != -1
-		
+
 		while separatorIndex != -1
 			message = buffer.slice 0, separatorIndex
 			processmsg message, socket
@@ -354,7 +389,7 @@ processmsg = (message, socket) ->
 	message = message.trim()
 	clog "Processing message: #{message}"
 	failure = false
-	
+
 	try
 		msgobj = JSON.parse message
 	catch SyntaxError
@@ -363,13 +398,13 @@ processmsg = (message, socket) ->
 		return
 
 	enoughinfo = msgobj.hasOwnProperty 'deviceid'
-	
+
 	if not enoughinfo
 		clog "Not enough info"
 		return
 
 	currentdevice = devices[msgobj.deviceid]
-	
+
 	if not currentdevice?
 		# well formed input - add device to list of devices
 		deviceid = msgobj.deviceid
@@ -408,7 +443,7 @@ io.sockets.on 'connection', (iosocket) ->
 	for deviceid, device of devices
 		clog "Add device #{device.deviceid}"
 		device.emit 'add'
-			
+
 	iosocket.on 'disconnect', ->
     clog "Socket disconnected"
 
@@ -421,7 +456,7 @@ io.sockets.on 'connection', (iosocket) ->
 
 app.get '/demo', (req, res) ->
 	res.redirect 'http://www.youtube.com/watch?v=IOncq-OM3_g'
-	
+
 app.get '/demo2', (req, res) ->
 	res.redirect 'http://www.youtube.com/watch?v=8hsvGO4FHNo'
 
