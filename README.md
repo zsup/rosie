@@ -86,10 +86,10 @@ PUT http://sprk.io/device/[:deviceid]/toggle
 
 # Fade
 Fades the light to a certain dim level over the specified duration.
-The target dim level should be an intger from 0 to 16.
+The target dim level should be an intger from 0 to 12.
 Other numbers or non-numbers will return an error.
-The optional duration is in seconds from 0 to 655.35, and it
-defaults to 0.4 if a bad value is provided or if omitted.
+The optional duration is in milliseconds from 0 to 600000 (ten minutes),
+and it defaults to 400 if a bad value is provided or if omitted.
 
 PUT http://sprk.io/device/[:deviceid]/fade/[:target]/[:duration]
 
