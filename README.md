@@ -20,19 +20,19 @@ Javascript, and Objective-C, but they are not yet available.
 This API is still in its early days, so expect lots and lots of changes.
 
 Possible HTML status codes are as follows:
-200 OK: You're good.
-400 Bad Request: Your syntax wasn't right. 
-401 Unauthorized: You didn't give us your API key, and you tried to access a protected device.
-403 Forbidden: Your API key is not authorized to access this device.
-404 Not Found: These are not the droids you're looking for. No device by that name.
-405 Method Not Allowed: Seems like you might have used the wrong HTTP method. Oops.
-409 Conflict: Used for scheduled commands. Someone has already scheduled a command at that time.
-418 Teapot: I'm a teapot.
-429 Too Many Requests: Slow down!
-460 Incapable: That device cannot run that command. Try checking the devicetype.
-461 Action Forbidden: You may be authorized to access the device, but you're not authorized to make that command.
-500 Internal Server Error: Fail.
-503 Service Unavailable: Fail. Overloaded or down for maintenence.
+* 200 OK: You're good.
+* 400 Bad Request: Your syntax wasn't right. 
+* 401 Unauthorized: You didn't give us your API key, and you tried to access a protected device.
+* 403 Forbidden: Your API key is not authorized to access this device.
+* 404 Not Found: These are not the droids you're looking for. No device by that name.
+* 405 Method Not Allowed: Seems like you might have used the wrong HTTP method. Oops.
+* 409 Conflict: Used for scheduled commands. Someone has already scheduled a command at that time.
+* 418 Teapot: I'm a teapot.
+* 429 Too Many Requests: Slow down!
+* 460 Incapable: That device cannot run that command. Try checking the devicetype.
+* 461 Action Forbidden: You may be authorized to access the device, but you're not authorized to make that command.
+* 500 Internal Server Error: Fail.
+* 503 Service Unavailable: Fail. Overloaded or down for maintenence.
 
 Other error messages might be produced automatically by Node.js/Express, but these are the ones that we implemented ourselves.
 
@@ -82,6 +82,15 @@ Toggles the status of the light. In other words, if the light is on, it turns of
 and if it's off, it turns on. Returns a status code (OK, error).
 
 PUT http://sprk.io/device/[:deviceid]/toggle
+
+
+# Fade
+Fades the light to a certain dim level over the specified duration.
+The target dim level should be an intger from 0 to 16.
+Other numbers or non-numbers will return an error.
+The duration is in seconds from 0 to 655.35 and defaults to 0.4.
+
+PUT http://sprk.io/device/[:deviceid]/fade/[:target]/[:duration]
 
 
 # Dim
