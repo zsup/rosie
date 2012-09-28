@@ -40,7 +40,7 @@ io = require('socket.io').listen(server)
 # Express configuration.
 
 app.configure ->
-	@set 'port', 80 # process.env.PORT || 3000
+	@set 'port', process.env.PORT || 80
 	@set 'views', "#{__dirname}/views"
 	@set 'view engine', 'jade'
 	@use express.favicon()
@@ -198,10 +198,10 @@ class Light extends Device
 		target = params[0]
 		duration_seconds = params[1] ? 0.4
 		if isNaN(target)
-			throw "Fade target is not a number."
+			throw "Fade target #{target} is not a number."
 		max_target = 16
-		if target < 0 or target > max_target or Math.floor(target) != target
-			throw "Fade target must be an integer between 0 and #{max_target}, inclusive."
+		if target < 0 or target > max_target
+			throw "Fade target #{target} must be an integer between 0 and #{max_target}, inclusive."
 
 		if isNaN(duration_seconds) or duration_seconds < 0 then duration_seconds = 0.4
 		if duration_seconds > 655.35 then duration_seconds = 655.35
