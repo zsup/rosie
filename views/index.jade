@@ -1,7 +1,7 @@
 extends layout
 
 block content
-	div.navbar.navbar-fixed-top
+	div.navbar.navbar-inverse.navbar-fixed-top
 		div.navbar-inner
 			div.container
 				a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
@@ -25,3 +25,5 @@ block content
 					h3= device.deviceid
 				div.dial-div
 					input.dial(type="text", data-deviceid=device.deviceid, data-devicestatus=device.devicestatus, value=device.dimval)
+
+	script(type="text/javascript", src="/javascripts/javascript.js")

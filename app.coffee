@@ -233,7 +233,9 @@ class Light extends Device
 ###
 app.get '/', (req, res) ->
   res.render 'index.jade', { devices: devices }
-    # TBD
+
+app.get '/buttons', (req, res) ->
+  res.render 'buttons.jade'
 
 ###
 # GETS.

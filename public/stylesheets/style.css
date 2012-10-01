@@ -31,11 +31,11 @@ a.switchy:active {
 .navbar .brand {
   float: left;
   display: block;
-  background-image: url('/images/spark-30px.png');
+  background-image: url('/images/spark.png');
   background-repeat: no-repeat;
-  width: 30px;
-  height: 30px;
-  margin: 7px 10px 7px 0;
+  width: 116px;
+  height: 37px;
+  margin: 4px 10px 3px 0;
   padding: 0;
 }
 
