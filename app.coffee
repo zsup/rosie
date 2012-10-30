@@ -105,6 +105,10 @@ class Device
       @store action, params
       return_values
 
+  # Update the device's status
+  update: ->
+    @message "getStatus"
+
   # Stringify for sharing over JSON.
   stringify: ->
     JSON.stringify
@@ -247,6 +251,8 @@ app.get '/device/:deviceid', (req, res) ->
   device = devices[deviceid]
 
   if device?
+    clog "Get latest status from #{device.deviceid}"
+    device.update()
     clog "Sending status of #{device.deviceid} to client"
     clog device.stringify()
     res.send 200, device.stringify()
