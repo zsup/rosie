@@ -359,7 +359,7 @@ app.get '/device/:deviceid/history', (req, res) ->
 server = net.createServer (socket) ->
   clog 'TCP client connected'
   socket.setEncoding 'ascii'
-  socket.setKeepAlive true
+  socket.setKeepAlive true, 30000
 
   socket.on 'close', ->
     for deviceid, device of devices
