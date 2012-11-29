@@ -72,6 +72,7 @@ ObjectId = Schema.ObjectId
 actionSchema = new Schema
   deviceid: String
   time: Date
+  ip: String
   action: String
   param: String
   devicestatus: Boolean
