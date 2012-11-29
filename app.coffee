@@ -96,13 +96,13 @@ class Device
     "schedule"
   ]
 
-  do: (action, params) ->
+  do: (action, params, ip) ->
     if @commands.indexOf(action) is -1
       throw "#{action} is not a valid command"
     else
       return_values = @[action](params)
       @emit 'update'
-      @store action, params
+      @store action, params, ip
       return_values
 
   # Update the device's status
@@ -150,10 +150,11 @@ class Device
       throw "Bad socket.IO message"
 
   # Add the action to the history
-  store: (action, params) ->
+  store: (action, params, ip) ->
     x = new Action
       deviceid: @deviceid
       time: new Date().toISOString()
+      ip: ip
       action: action
       params: params
       devicestatus: @devicestatus
@@ -217,11 +218,13 @@ class Light extends Device
     [target, duration_ms]
 
   # Add the action to the history
-  store: (action) ->
+  store: (action, params, ip) ->
     x = new Action
       deviceid: @deviceid
       time: new Date().toISOString()
+      ip: ip
       action: action
+      params: params
       devicestatus: @devicestatus
       dimval: @dimval
     x.save()
@@ -276,7 +279,7 @@ app.put '/device/:deviceid/fade/:target/:duration_ms', (req, res) ->
     target = parseInt req.params.target, 10
     duration_ms = parseInt req.params.duration_ms, 10
     try
-      [target, duration_ms] = device.do('fade', [target, duration_ms])
+      [target, duration_ms] = device.do('fade', [target, duration_ms], req.ip)
       res.send 200, "Message sent to #{device.deviceid} to fade to #{target} over #{duration_ms} milliseconds"
     catch err
       res.send 400, "Not a valid request. #{err}"
@@ -300,7 +303,7 @@ app.put '/device/:deviceid/:action/:param?', (req, res) ->
   if devices[deviceid]?
     device = devices[deviceid]
     try
-      device.do(action, [param])
+      device.do(action, [param], req.ip)
       res.send 200, "Message sent to #{deviceid} to #{action}."
     catch err
       res.send 460, "Not a valid request. #{err}"
