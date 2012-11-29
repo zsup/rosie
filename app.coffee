@@ -348,6 +348,7 @@ app.get '/device/:deviceid/history', (req, res) ->
         do (action) ->
           response[action._id] = {
             time: action.time
+            ip: action.ip
             action: action.action
             devicestatus: action.devicestatus
             dimval: action.dimval
