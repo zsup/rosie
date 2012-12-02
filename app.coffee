@@ -393,10 +393,10 @@ app.delete '/device/:deviceid/schedule/:time', (req, res) ->
 # HISTORY.
 ###
 
-app.get '/device/:deviceid/history', (req, res) ->
+app.get '/device/:deviceid/history/:entries?', (req, res) ->
   deviceid = req.params.deviceid
 
-  Action.find { deviceid: deviceid }, (err, actions) ->
+  Action.find { deviceid: deviceid }, null, { limit: req.params.entries || 20 }, (err, actions) ->
     if err
       res.send 404, "Database error."
     else if actions.length is 0
