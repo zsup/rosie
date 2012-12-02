@@ -267,6 +267,7 @@ class Arduino extends Device
     "toggle"
     "schedule"
     "set"
+    "cycle"
   ]
 
   turnOn: (component) ->
@@ -298,6 +299,11 @@ class Arduino extends Device
     clog "Setting component levels to #{levels}"
     @message "set #{levels}"
     @devicestatus = levels
+
+  cycle: ->
+    clog "Cycling components"
+    @message "cycle"
+    @devicestatus = "000000"
 
 
 
