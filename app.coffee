@@ -270,7 +270,7 @@ class Arduino extends Device
   ]
 
   turnOn: (component) ->
-    if component?
+    if isNaN(component)
       throw "Too many components." if component > max_components
       clog "Telling component #{component} of #{@deviceid} to turn on"
       @message "component #{component} 1"
@@ -281,7 +281,7 @@ class Arduino extends Device
       @devicestatus = "111111"
 
   turnOff: (component) ->
-    if component?
+    if isNaN(component)
       throw "Too many components." if component > max_components
       clog "Telling component #{component} of #{@deviceid} to turn off"
       @message "component #{component} 0"
