@@ -249,6 +249,48 @@ class Light extends Device
     x.save()
     clog "Stored #{action} in database"
 
+# Arduinos are like other devices but they have up to 8 'components'
+# that can be individually controlled.
+#
+# Components essentially map to 'pins' on the micro-controller,
+# and 'on' maps to 'HIGH' whereas 'off' maps to 'LOW'.
+class Arduino extends Device
+  constructor: (@deviceid, @devicestatus = 0, @socket) ->
+    @devicetype = "Arduino"
+
+  commands: [
+    "turnOn"
+    "turnOff"
+    "toggle"
+    "schedule"
+    "set"
+  ]
+
+  turnOn: (component) ->
+    if component?
+      clog "Telling component #{component} of #{@deviceid} to turn on"
+      @message "component #{component} 1"
+    else
+      clog "Telling #{@deviceid} to turn on"
+      @message "turnOn"
+
+  turnOff: (component) ->
+    if component?
+      clog "Telling component #{component} of #{@deviceid} to turn off"
+      @message "component #{component} 0"
+    else
+      clog "Telling #{@deviceid} to turn off"
+      @message "turnOff"
+
+  max_components = 8
+  set: (levels) ->
+    components = levels.length
+    throw "Too many components." if components > max_components
+    clog "Setting component levels to #{levels}"
+    @message "set #{levels}"
+
+
+
 
 ##########################################
 # ROUTING FOR THE WEB APP.               #
