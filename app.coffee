@@ -45,6 +45,7 @@ authorizedKeys =
   hwy4iavwi83ABUJq: ['67.23.22.71']
   fb91rfPFS84wmzH3: ['216.239.36.21', '216.239.34.21',
                      '216.239.38.21', '216.239.32.21']
+  icecreamisdelish: ['198.74.6.22']
 
 app.use '/device', (req, res, next) ->
   authorizedIPs = authorizedKeys[req.query.api_key]
