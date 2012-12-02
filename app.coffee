@@ -45,7 +45,8 @@ authorizedKeys =
   hwy4iavwi83ABUJq: ['67.23.22.71']
   fb91rfPFS84wmzH3: ['216.239.36.21', '216.239.34.21',
                      '216.239.38.21', '216.239.32.21']
-  icecreamisdelish: ['198.74.6.22']
+  icecreamisdelish: ['198.74.6.22', '127.0.0.1']
+
 
 app.use '/device', (req, res, next) ->
   authorizedIPs = authorizedKeys[req.query.api_key]
@@ -485,6 +486,8 @@ processmsg = (message, socket) ->
 
     if devicetype is "Light"
       devices[deviceid] = new Light(deviceid, devicestatus, dimval, socket)
+    else if devicetype is "Arduino"
+      devices[deviceid] = new Arduino(deviceid, devicestatus, socket)
     else
       devices[deviceid] = new Device(deviceid, devicestatus, socket)
     devices[deviceid].emit 'add'
