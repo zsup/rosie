@@ -37,6 +37,23 @@ app = express()
 server = http.createServer app
 io = require('socket.io').listen(server)
 
+
+# API Key Authorization Middleware
+
+authorizedKeys =
+  y9c0MbNA7rkS412w: ['127.0.0.1']
+  hwy4iavwi83ABUJq: ['67.23.22.71']
+  fb91rfPFS84wmzH3: ['216.239.36.21', '216.239.34.21',
+                     '216.239.38.21', '216.239.32.21']
+
+app.use '/device', (req, res, next) ->
+  authorizedIPs = authorizedKeys[req.query.api_key]
+  if authorizedIPs? and 0 <= authorizedIPs.indexOf(req.ip)
+    next()
+  else
+    next "Unauthorized IP #{req.ip} for key #{req.query.api_key}"
+
+
 # Express configuration.
 
 app.configure ->

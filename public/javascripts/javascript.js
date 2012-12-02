@@ -1,6 +1,7 @@
 $(document).ready(function() {
 	
-	var knobvars = {
+	var api_key = '?api_key=y9c0MbNA7rkS412w'
+  var knobvars = {
 		'min': 0 ,
 		'max': 255 ,
 		'width': 100 ,
@@ -9,16 +10,16 @@ $(document).ready(function() {
 		'fgColor' : "#00AEEF" ,
 		'displayInput' : false ,
 		'release': function (value, did) {
-			$.ajax('device/' + did + '/dim/' + value, {type: "PUT"});
+			$.ajax('device/' + did + '/dim/' + value + api_key, {type: "PUT"});
 		},
 		'clicked': function (did) {
-			$.ajax('device/' + did + '/toggle', {type: "PUT"});
+			$.ajax('device/' + did + '/toggle' + api_key, {type: "PUT"});
 		},
 		'turnon': function (did) {
-			$.ajax('device/' + did + '/turnOn', {type: "PUT"});
+			$.ajax('device/' + did + '/turnOn' + api_key, {type: "PUT"});
 		},
 		'turnoff': function (did) {
-			$.ajax('device/' + did + '/turnOff', {type: "PUT"});
+			$.ajax('device/' + did + '/turnOff' + api_key, {type: "PUT"});
 		}
 	};
 	
