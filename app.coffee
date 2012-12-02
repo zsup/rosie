@@ -256,6 +256,8 @@ class Light extends Device
 # Components essentially map to 'pins' on the micro-controller,
 # and 'on' maps to 'HIGH' whereas 'off' maps to 'LOW'.
 class Arduino extends Device
+  max_components = 8
+
   constructor: (@deviceid, @devicestatus = 0, @socket) ->
     @devicetype = "Arduino"
 
@@ -269,26 +271,33 @@ class Arduino extends Device
 
   turnOn: (component) ->
     if component?
+      throw "Too many components." if component > max_components
       clog "Telling component #{component} of #{@deviceid} to turn on"
       @message "component #{component} 1"
+      @devicestatus = @devicestatus.substr(0, component) + "1" + @device.substr(component+1)
     else
       clog "Telling #{@deviceid} to turn on"
       @message "turnOn"
+      @devicestatus = "111111"
 
   turnOff: (component) ->
     if component?
+      throw "Too many components." if component > max_components
       clog "Telling component #{component} of #{@deviceid} to turn off"
       @message "component #{component} 0"
+      @devicestatus = @devicestatus.substr(0, component) + "0" + @device.substr(component+1)
     else
       clog "Telling #{@deviceid} to turn off"
       @message "turnOff"
+      @devicestatus = "000000"
 
-  max_components = 8
+  
   set: (levels) ->
     components = levels.length
     throw "Too many components." if components > max_components
     clog "Setting component levels to #{levels}"
     @message "set #{levels}"
+    @devicestatus = levels
 
 
 
