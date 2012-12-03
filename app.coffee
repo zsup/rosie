@@ -258,7 +258,7 @@ class Light extends Device
 class Arduino extends Device
   max_components = 8
 
-  constructor: (@deviceid, @devicestatus = 0, @socket) ->
+  constructor: (@deviceid, @devicestatus = "000000", @socket) ->
     @devicetype = "Arduino"
 
   commands: [
@@ -271,22 +271,22 @@ class Arduino extends Device
   ]
 
   turnOn: (component) ->
-    if component?
-      throw "Too many components." if component > max_components
+    component = Number(component)
+    if component? && 0 < component < max_components
       clog "Telling component #{component} of #{@deviceid} to turn on"
       @message "component #{component} 1"
-      # @devicestatus = @devicestatus.substr(0, component) + "1" + @device.substr(component+1)
+      # @devicestatus = @devicestatus.substring(0, component) + "1" + @device.substring(component+1)
     else
       clog "Telling #{@deviceid} to turn on"
       @message "turnOn"
       @devicestatus = "111111"
 
   turnOff: (component) ->
-    if component?
-      throw "Too many components." if component > max_components
+    component = Number(component)
+    if component? && 0 < component < max_components
       clog "Telling component #{component} of #{@deviceid} to turn off"
       @message "component #{component} 0"
-      # @devicestatus = @devicestatus.substr(0, component) + "0" + @device.substr(component+1)
+      # @devicestatus = @devicestatus.substring(0, component) + "0" + @device.substring(component+1)
     else
       clog "Telling #{@deviceid} to turn off"
       @message "turnOff"
