@@ -46,14 +46,14 @@ io = require('socket.io').listen(server)
 authorizedKeys =
   y9c0MbNA7rkS412w: ['127.0.0.1']
   hwy4iavwi83ABUJq: ['67.23.22.71']
-  fb91rfPFS84wmzH3: ['54.243.92.108']
+  fb91rfPFS84wmzH3: ['*']
   icecreamisdelish: ['198.74.6.22', '127.0.0.1']
   ripelliottcarter: ['75.72.186.169']
 
 
 app.use '/device', (req, res, next) ->
   authorizedIPs = authorizedKeys[req.query.api_key]
-  if authorizedIPs? and 0 <= authorizedIPs.indexOf(req.ip)
+  if authorizedIPs? and ('*' == authorizedIPs[0] or 0 <= authorizedIPs.indexOf(req.ip))
     next()
   else
     next "Unauthorized IP #{req.ip} for key #{req.query.api_key}"
