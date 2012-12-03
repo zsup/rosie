@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  var api_key = '?api_key=y9c0MbNA7rkS412w'
+  var api_key = '?api_key=fb91rfPFS84wmzH3'
 
 	$('.btn1').click(function() {
 		$.ajax("/device/Elroy/fade/12/1000" + api_key, {
