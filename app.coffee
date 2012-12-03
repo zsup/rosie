@@ -49,6 +49,7 @@ authorizedKeys =
   fb91rfPFS84wmzH3: ['216.239.36.21', '216.239.34.21',
                      '216.239.38.21', '216.239.32.21']
   icecreamisdelish: ['198.74.6.22', '127.0.0.1']
+  ripelliottcarter: ['75.72.186.169']
 
 
 app.use '/device', (req, res, next) ->
