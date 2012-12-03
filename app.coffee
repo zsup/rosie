@@ -253,13 +253,13 @@ class Light extends Device
     x.save()
     clog "Stored #{action} in database"
 
-# Arduinos are like other devices but they have up to 8 'components'
+# Arduinos are like other devices but they have up to 6 'components'
 # that can be individually controlled.
 #
 # Components essentially map to 'pins' on the micro-controller,
 # and 'on' maps to 'HIGH' whereas 'off' maps to 'LOW'.
 class Arduino extends Device
-  max_components = 8
+  max_components = 6
 
   constructor: (@deviceid, @devicestatus = "000000", @socket) ->
     @devicetype = "Arduino"
@@ -275,9 +275,11 @@ class Arduino extends Device
 
   turnOn: (component) ->
     if isNumber(component)
+      component = Number(component)
+      throw "Too many components" if component >= max_components
       clog "Telling component #{component} of #{@deviceid} to turn on"
       @message "component #{component} 1"
-      # @devicestatus = @devicestatus.substring(0, component) + "1" + @device.substring(component+1)
+      @devicestatus = @devicestatus.substring(0, component) + "1" + @devicestatus.substring(component+1)
     else
       clog "Telling #{@deviceid} to turn on"
       @message "turnOn"
@@ -285,13 +287,24 @@ class Arduino extends Device
 
   turnOff: (component) ->
     if isNumber(component)
+      component = Number(component)
+      throw "Too many components" if component >= max_components
       clog "Telling component #{component} of #{@deviceid} to turn off"
       @message "component #{component} 0"
-      # @devicestatus = @devicestatus.substring(0, component) + "0" + @device.substring(component+1)
+      @devicestatus = @devicestatus.substring(0, component) + "0" + @devicestatus.substring(component+1)
     else
       clog "Telling #{@deviceid} to turn off"
       @message "turnOff"
       @devicestatus = "000000"
+
+  toggle: (component) ->
+    if isNumber(component) && component < max_components
+      if @devicestatus.charAt(component) is "0"
+        @turnOn component
+      else
+        @turnOff component
+    else
+      throw "Bad component number."
 
   
   set: (levels) ->
@@ -497,8 +510,8 @@ processmsg = (message, socket) ->
     # well formed input - add device to list of devices
     deviceid = msgobj.deviceid
     devicetype = msgobj.devicetype ? "Light"
-    devicestatus = msgobj.devicestatus ? 0
-    dimval = msgobj.dimval ? 255
+    devicestatus = msgobj.devicestatus
+    dimval = msgobj.dimval
 
     if devicetype is "Light"
       devices[deviceid] = new Light(deviceid, devicestatus, dimval, socket)
