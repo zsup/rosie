@@ -272,7 +272,7 @@ class Arduino extends Device
 
   turnOn: (component) ->
     component = Number(component)
-    if component? && 0 < component < max_components
+    if component? && 0 <= component < max_components
       clog "Telling component #{component} of #{@deviceid} to turn on"
       @message "component #{component} 1"
       # @devicestatus = @devicestatus.substring(0, component) + "1" + @device.substring(component+1)
@@ -283,7 +283,7 @@ class Arduino extends Device
 
   turnOff: (component) ->
     component = Number(component)
-    if component? && 0 < component < max_components
+    if component? && 0 <= component < max_components
       clog "Telling component #{component} of #{@deviceid} to turn off"
       @message "component #{component} 0"
       # @devicestatus = @devicestatus.substring(0, component) + "0" + @device.substring(component+1)
