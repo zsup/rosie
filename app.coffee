@@ -46,8 +46,7 @@ io = require('socket.io').listen(server)
 authorizedKeys =
   y9c0MbNA7rkS412w: ['127.0.0.1']
   hwy4iavwi83ABUJq: ['67.23.22.71']
-  fb91rfPFS84wmzH3: ['216.239.36.21', '216.239.34.21',
-                     '216.239.38.21', '216.239.32.21']
+  fb91rfPFS84wmzH3: ['54.243.92.108']
   icecreamisdelish: ['198.74.6.22', '127.0.0.1']
   ripelliottcarter: ['75.72.186.169']
 
