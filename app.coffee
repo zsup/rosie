@@ -199,6 +199,7 @@ class Light extends Device
     "dim"
     "pulse"
     "fade"
+    "color"
   ]
 
   # Stringify for sharing over JSON.
@@ -212,6 +213,10 @@ class Light extends Device
   pulse: ->
     clog "Telling #{@deviceid} to pulse"
     @message "pulse"
+
+  color: (params) ->
+    clog "Telling #{@deviceid} to change color to #{params}"
+    @message "led#{params}"
 
   dim: (params) ->
     value = parseInt params[0]
@@ -306,7 +311,7 @@ class Arduino extends Device
     else
       throw "Bad component number."
 
-  
+
   set: (levels) ->
     components = levels.length
     throw "Too many components." if components > max_components
