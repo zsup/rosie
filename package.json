@@ -1,13 +1,18 @@
 {
-    "name": "SWITCH-API"
-  , "version": "0.2.1"
-  , "private": true
-  , "main": "app.coffee"
-  , "dependencies": {
-  		"coffee-script" : "*"
-    , "express": "3.x"
-    , "jade": ">= 0.0.1"
-    , "socket.io": "0.9.x"
-    , "mongoose": "3.0.x"
+  "name": "spark-rosie",
+  "version": "0.2.2",
+  "private": true,
+  "main": "app.coffee",
+  "dependencies": {
+    "coffee-script": "*",
+    "express": "3.x",
+    "jade": ">= 0.0.1",
+    "socket.io": "0.9.x",
+    "mongoose": "3.0.x",
+    "forever": "0.10.x"
+  },
+  "scripts": {
+    "start": "forever start -a -l forever.log -o log/out.log -e log/err.log -c coffee app.coffee",
+    "stop": "forever stop app.coffee"
   }
 }

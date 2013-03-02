@@ -51,18 +51,18 @@ authorizedKeys =
   ripelliottcarter: ['75.72.186.169']
 
 
-app.use '/device', (req, res, next) ->
-  authorizedIPs = authorizedKeys[req.query.api_key]
-  if authorizedIPs? and ('*' == authorizedIPs[0] or 0 <= authorizedIPs.indexOf(req.ip))
-    next()
-  else
-    next "Unauthorized IP #{req.ip} for key #{req.query.api_key}"
+# app.use '/device', (req, res, next) ->
+#   authorizedIPs = authorizedKeys[req.query.api_key]
+#   if authorizedIPs? and ('*' == authorizedIPs[0] or 0 <= authorizedIPs.indexOf(req.ip))
+#     next()
+#   else
+#     next "Unauthorized IP #{req.ip} for key #{req.query.api_key}"
 
 
 # Express configuration.
 
 app.configure ->
-  @set 'port', process.env.PORT || 80
+  @set 'port', process.env.ROSIE_PORT || 8080
   @set 'views', "#{__dirname}/views"
   @set 'view engine', 'jade'
   @use express.favicon()
